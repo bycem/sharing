@@ -173,16 +173,7 @@
   .compare .why { font-family: "IBM Plex Sans", sans-serif; font-size: .78rem; opacity: .75; }
   @media (max-width: 640px) { .compare { grid-template-columns: 1fr; } .compare .arrow { transform: rotate(90deg); } }
 
-  /* example wall */
-  .wall { overflow-x: auto; padding: 8px 4px 16px; }
-  .wall-inner { display: grid; grid-auto-flow: column; grid-auto-columns: 150px; gap: 14px; min-width: max-content; }
-  .lane { display: grid; gap: 12px; align-content: start; }
-  .lane-label { font-family: "IBM Plex Mono", monospace; font-size: .72rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .08em; }
-  .wall .sticky { min-height: 96px; font-size: .95rem; }
-  .wall .sticky.circle { width: 96px; min-height: 0; justify-self: center; }
-  .pivot { position: relative; }
-  .pivot::before { content: ""; position: absolute; left: -7px; top: -8px; bottom: -8px; width: 3px; background: var(--marker); opacity: .7; }
-  .pivot .lane-label:first-child { color: var(--marker); }
+  .diagram.board svg { min-width: 900px; }
 
   /* diagrams */
   .diagram { background: var(--panel); border: 1px solid var(--panel-edge); padding: 16px; overflow-x: auto; }
@@ -532,7 +523,7 @@
         <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:-1deg">Sipariş kaydedildi<div class="why">Teknik olay. İş için ne değişti?</div></div>
         <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:1deg">Sipariş oluştur<div class="why">Emir kipi. Bu bir komut, maviye ait.</div></div>
         <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:-2deg">OrderStatus = 3<div class="why">Kodun dili. Domain uzmanı itiraz edemez.</div></div>
-        <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:1.5deg>Sipariş süreci<div class="why">Olay değil, konu başlığı.</div></div>
+        <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:1.5deg">Sipariş süreci<div class="why">Olay değil, konu başlığı.</div></div>
       </div>
       <div class="arrow">→</div>
       <div class="col">
@@ -548,65 +539,62 @@
   <section>
     <div class="eyebrow">Örnek</div>
     <h2>Sipariş oluşturma board'u böyle görünebilir</h2>
-    <p class="lead" style="margin-bottom:12px">Tartışmayı başlatmak için hazırlanmış örnek; dokuz kart tipinin hepsi burada. Doğru olduğu için değil, itiraz edilebilsin diye burada. Kırmızı çizgi pivotal event'i işaretliyor.</p>
-    <div class="wall">
-      <div class="wall-inner">
-        <div class="lane">
-          <div class="lane-label">Aktör</div>
-          <div class="sticky circle" style="--sticky-bg:var(--actor);--tilt:0deg">Müşteri</div>
-          <div class="lane-label">Komut</div>
-          <div class="sticky" style="--sticky-bg:var(--command);--tilt:-1deg">Sepeti Onayla</div>
-          <div class="lane-label">Olay</div>
-          <div class="sticky" style="--sticky-bg:var(--event);--tilt:1deg">Sepet Onaylandı</div>
-          <div class="lane-label">Not</div>
-          <div class="sticky bubble" style="--tilt:-1deg;font-size:.85rem">Kupon ve kargo indirimi burada hesaplanıyor</div>
-        </div>
-        <div class="lane">
-          <div class="lane-label">Policy</div>
-          <div class="sticky" style="--sticky-bg:var(--policy);--tilt:-2deg;font-size:.85rem">Sepet onaylanınca siparişi oluştur</div>
-          <div class="lane-label">Komut</div>
-          <div class="sticky" style="--sticky-bg:var(--command);--tilt:2deg">Siparişi Oluştur</div>
-          <div class="lane-label">Olay</div>
-          <div class="sticky" style="--sticky-bg:var(--event);--tilt:-1deg">Sipariş Oluşturuldu</div>
-          <div class="lane-label">Constraint</div>
-          <div class="sticky" style="--sticky-bg:var(--constraint);--tilt:1deg;font-size:.85rem">Toplam tutar, kalem toplamına eşit olmalı</div>
-          <div class="lane-label">Aggregate</div>
-          <div class="sticky" style="--sticky-bg:var(--aggregate);--tilt:-1deg">Order<br><small>OrderItem'ları kapsar</small></div>
-        </div>
-        <div class="lane pivot">
-          <div class="lane-label">Pivotal · External</div>
-          <div class="sticky" style="--sticky-bg:var(--external);--tilt:-1deg;min-height:80px">Ödeme Sağlayıcı</div>
-          <div class="lane-label">Komut</div>
-          <div class="sticky" style="--sticky-bg:var(--command);--tilt:-2deg">Ödemeyi Tahsil Et</div>
-          <div class="lane-label">Olay</div>
-          <div class="sticky" style="--sticky-bg:var(--event);--tilt:2deg">Ödeme Alındı</div>
-          <div class="lane-label">Concern</div>
-          <div class="sticky" style="--sticky-bg:var(--concern);--tilt:-3deg;font-size:.85rem">Ödeme başarısız olursa sipariş silinir mi, iptal mi?</div>
-        </div>
-        <div class="lane">
-          <div class="lane-label">Policy</div>
-          <div class="sticky" style="--sticky-bg:var(--policy);--tilt:2deg;font-size:.85rem">Ödeme alınınca satıcıya ilet</div>
-          <div class="lane-label">Komut</div>
-          <div class="sticky" style="--sticky-bg:var(--command);--tilt:1deg">Siparişi Satıcıya Aç</div>
-          <div class="lane-label">Olay</div>
-          <div class="sticky" style="--sticky-bg:var(--event);--tilt:-1deg">Sipariş Satıcıya İletildi</div>
-          <div class="lane-label">Concern</div>
-          <div class="sticky" style="--sticky-bg:var(--concern);--tilt:2deg;font-size:.85rem">Çok satıcılı sepet burada mı bölünüyor?</div>
-        </div>
-        <div class="lane">
-          <div class="lane-label">Aktör</div>
-          <div class="sticky circle" style="--sticky-bg:var(--actor);--tilt:0deg">Satıcı</div>
-          <div class="lane-label">Komut</div>
-          <div class="sticky" style="--sticky-bg:var(--command);--tilt:2deg">Kargoya Ver</div>
-          <div class="lane-label">Olay</div>
-          <div class="sticky" style="--sticky-bg:var(--event);--tilt:1deg">Kargoya Verildi</div>
-          <div class="lane-label">External</div>
-          <div class="sticky" style="--sticky-bg:var(--external);--tilt:1deg;min-height:80px">Shipment API<br><small>barkod üretir</small></div>
-          <div class="lane-label">Aggregate</div>
-          <div class="sticky" style="--sticky-bg:var(--aggregate);--tilt:1deg">Shipment<br><small>aday</small></div>
-        </div>
-      </div>
+    <p class="lead" style="margin-bottom:12px">Tartışmayı başlatmak için hazırlanmış örnek; dokuz kart tipinin hepsi, tetikleme okları ve bounded context çerçeveleri burada. Doğru olduğu için değil, itiraz edilebilsin diye burada.</p>
+    <div class="diagram board">
+      <svg viewBox="0 0 1040 560" role="img" aria-label="Örnek Big Picture board: sepet onayından kargoya kadar olaylar, oklar ve bounded context adayları">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker><filter id="sh" x="-5%" y="-5%" width="115%" height="120%"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-opacity=".25"/></filter></defs>
+      <rect x="18" y="12" width="190" height="538" rx="16" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-dasharray="7 5" opacity=".75"/>
+      <text x="32" y="540" class="svg-kalam" font-size="15" fill="var(--ink)">Cart <tspan class="svg-mono" font-size="9" fill="var(--ink-faint)">BOUNDED CONTEXT ADAYI</tspan></text>
+      <rect x="222" y="12" width="586" height="538" rx="16" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-dasharray="7 5" opacity=".75"/>
+      <text x="236" y="540" class="svg-kalam" font-size="15" fill="var(--ink)">Orders <tspan class="svg-mono" font-size="9" fill="var(--ink-faint)">BOUNDED CONTEXT ADAYI</tspan></text>
+      <rect x="822" y="12" width="200" height="538" rx="16" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-dasharray="7 5" opacity=".75"/>
+      <text x="836" y="540" class="svg-kalam" font-size="15" fill="var(--ink)">Shipping <tspan class="svg-mono" font-size="9" fill="var(--ink-faint)">BOUNDED CONTEXT ADAYI</tspan></text>
+      <line x1="30" y1="382" x2="1010" y2="382" stroke="var(--marker)" stroke-width="3" opacity=".6"/>
+      <text x="30" y="398" class="svg-mono" font-size="9" fill="var(--ink-faint)">ZAMAN →</text>
+      <line x1="426" y1="20" x2="426" y2="390" stroke="var(--marker)" stroke-width="4" opacity=".8"/>
+      <text x="432" y="376" class="svg-mono" font-size="9" fill="var(--marker)">PIVOTAL · ÖDEME ALINDI</text>
+      <circle cx="105" cy="70" r="36" fill="var(--actor)" stroke="#1E2430" stroke-width="1" filter="url(#sh)"/><text x="105" y="75" text-anchor="middle" class="svg-kalam" font-size="13" fill="#1E2430">Müşteri</text>
+      <line x1="105" y1="108" x2="105" y2="136" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(-2 105.0 185.0)"><rect x="40" y="140" width="130" height="90" fill="var(--command)" filter="url(#sh)"/><text x="50" y="166" class="svg-kalam" font-size="13" fill="#1E2430">Sepeti Onayla</text><text x="50" y="220" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">COMMAND</text></g>
+      <line x1="105" y1="230" x2="105" y2="266" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(1 105.0 315.0)"><rect x="40" y="270" width="130" height="90" fill="var(--event)" filter="url(#sh)"/><text x="50" y="296" class="svg-kalam" font-size="13" fill="#1E2430">Sepet</text><text x="50" y="314" class="svg-kalam" font-size="13" fill="#1E2430">Onaylandı</text><text x="50" y="350" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">EVENT</text></g>
+      <rect x="40" y="420" width="130" height="70" rx="10" fill="var(--notes)" stroke="var(--notes-edge)" stroke-width="1.5"/><path d="M62 490 l-4 14 l18 -14" fill="var(--notes)" stroke="var(--notes-edge)" stroke-width="1.5"/><text x="50" y="444" class="svg-sans" font-size="10.5" fill="#1E2430">Kupon ve kargo indirimi</text><text x="50" y="459" class="svg-sans" font-size="10.5" fill="#1E2430">burada hesaplanıyor</text>
+      <g transform="rotate(-1 305.0 75.0)"><rect x="240" y="30" width="130" height="90" fill="var(--policy)" filter="url(#sh)"/><text x="250" y="56" class="svg-kalam" font-size="12" fill="#1E2430">Sepet onaylanınca</text><text x="250" y="74" class="svg-kalam" font-size="12" fill="#1E2430">siparişi oluştur</text><text x="250" y="110" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">POLICY</text></g>
+      <line x1="172" y1="290" x2="236" y2="100" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/><text x="210.0" y="189.0" class="svg-mono" font-size="9" fill="var(--ink-faint)">tetikler</text>
+      <line x1="305" y1="120" x2="305" y2="136" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(2 305.0 185.0)"><rect x="240" y="140" width="130" height="90" fill="var(--command)" filter="url(#sh)"/><text x="250" y="166" class="svg-kalam" font-size="13" fill="#1E2430">Siparişi Oluştur</text><text x="250" y="220" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">COMMAND</text></g>
+      <line x1="305" y1="230" x2="305" y2="266" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(-1 305.0 315.0)"><rect x="240" y="270" width="130" height="90" fill="var(--event)" filter="url(#sh)"/><text x="250" y="296" class="svg-kalam" font-size="13" fill="#1E2430">Sipariş</text><text x="250" y="314" class="svg-kalam" font-size="13" fill="#1E2430">Oluşturuldu</text><text x="250" y="350" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">EVENT</text></g>
+      <g transform="rotate(1 270.0 455.0)"><rect x="240" y="420" width="60" height="70" fill="var(--aggregate)" filter="url(#sh)"/><text x="250" y="446" class="svg-kalam" font-size="13" fill="#1E2430">Order</text><text x="250" y="480" class="svg-sans" font-size="7.5" fill="#1E2430" opacity=".65" letter-spacing=".5">AGGREGATE</text></g>
+      <g transform="rotate(-2 339.0 455.0)"><rect x="308" y="420" width="62" height="70" fill="var(--constraint)" filter="url(#sh)"/><text x="318" y="438" class="svg-kalam" font-size="10" fill="#1E2430">Tutar =</text><text x="318" y="452" class="svg-kalam" font-size="10" fill="#1E2430">kalem</text><text x="318" y="466" class="svg-kalam" font-size="10" fill="#1E2430">toplamı</text><text x="318" y="480" class="svg-sans" font-size="7.5" fill="#1E2430" opacity=".65" letter-spacing=".5">CONSTRAINT</text></g>
+      <g transform="rotate(2 505.0 75.0)"><rect x="440" y="30" width="130" height="90" fill="var(--external)" filter="url(#sh)"/><text x="450" y="56" class="svg-kalam" font-size="13" fill="#1E2430">Ödeme</text><text x="450" y="74" class="svg-kalam" font-size="13" fill="#1E2430">Sağlayıcı</text><text x="450" y="110" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">EXTERNAL SYSTEM</text></g>
+      <line x1="372" y1="315" x2="436" y2="185" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/><text x="410.0" y="244.0" class="svg-mono" font-size="9" fill="var(--ink-faint)">tetikler</text>
+      <line x1="505" y1="120" x2="505" y2="136" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(-2 505.0 185.0)"><rect x="440" y="140" width="130" height="90" fill="var(--command)" filter="url(#sh)"/><text x="450" y="166" class="svg-kalam" font-size="13" fill="#1E2430">Ödemeyi</text><text x="450" y="184" class="svg-kalam" font-size="13" fill="#1E2430">Tahsil Et</text><text x="450" y="220" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">COMMAND</text></g>
+      <line x1="505" y1="230" x2="505" y2="266" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(2 505.0 315.0)"><rect x="440" y="270" width="130" height="90" fill="var(--event)" filter="url(#sh)"/><text x="450" y="296" class="svg-kalam" font-size="13" fill="#1E2430">Ödeme Alındı</text><text x="450" y="350" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">EVENT</text></g>
+      <g transform="rotate(-3 505.0 465.0)"><rect x="440" y="420" width="130" height="90" fill="var(--concern)" filter="url(#sh)"/><text x="450" y="446" class="svg-kalam" font-size="11" fill="#1E2430">Ödeme başarısızsa</text><text x="450" y="464" class="svg-kalam" font-size="11" fill="#1E2430">sipariş silinir mi,</text><text x="450" y="482" class="svg-kalam" font-size="11" fill="#1E2430">iptal mi?</text><text x="450" y="500" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">CONCERN</text></g>
+      <line x1="505" y1="360" x2="505" y2="416" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)" stroke-dasharray="5 4"/>
+      <g transform="rotate(1 705.0 75.0)"><rect x="640" y="30" width="130" height="90" fill="var(--policy)" filter="url(#sh)"/><text x="650" y="56" class="svg-kalam" font-size="12" fill="#1E2430">Ödeme alınınca</text><text x="650" y="74" class="svg-kalam" font-size="12" fill="#1E2430">satıcıya ilet</text><text x="650" y="110" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">POLICY</text></g>
+      <line x1="572" y1="290" x2="636" y2="100" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/><text x="610.0" y="189.0" class="svg-mono" font-size="9" fill="var(--ink-faint)">tetikler</text>
+      <line x1="705" y1="120" x2="705" y2="136" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(-1 705.0 185.0)"><rect x="640" y="140" width="130" height="90" fill="var(--command)" filter="url(#sh)"/><text x="650" y="166" class="svg-kalam" font-size="13" fill="#1E2430">Siparişi</text><text x="650" y="184" class="svg-kalam" font-size="13" fill="#1E2430">Satıcıya Aç</text><text x="650" y="220" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">COMMAND</text></g>
+      <line x1="705" y1="230" x2="705" y2="266" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(1 705.0 315.0)"><rect x="640" y="270" width="130" height="90" fill="var(--event)" filter="url(#sh)"/><text x="650" y="296" class="svg-kalam" font-size="13" fill="#1E2430">Sipariş Satıcıya</text><text x="650" y="314" class="svg-kalam" font-size="13" fill="#1E2430">İletildi</text><text x="650" y="350" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">EVENT</text></g>
+      <g transform="rotate(2 705.0 465.0)"><rect x="640" y="420" width="130" height="90" fill="var(--concern)" filter="url(#sh)"/><text x="650" y="446" class="svg-kalam" font-size="11" fill="#1E2430">Çok satıcılı sepet</text><text x="650" y="464" class="svg-kalam" font-size="11" fill="#1E2430">burada mı</text><text x="650" y="482" class="svg-kalam" font-size="11" fill="#1E2430">bölünüyor?</text><text x="650" y="500" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">CONCERN</text></g>
+      <line x1="705" y1="360" x2="705" y2="416" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)" stroke-dasharray="5 4"/>
+      <circle cx="905" cy="70" r="36" fill="var(--actor)" stroke="#1E2430" stroke-width="1" filter="url(#sh)"/><text x="905" y="75" text-anchor="middle" class="svg-kalam" font-size="13" fill="#1E2430">Satıcı</text>
+      <line x1="772" y1="315" x2="836" y2="185" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/><text x="810.0" y="244.0" class="svg-mono" font-size="9" fill="var(--ink-faint)">tetikler</text>
+      <line x1="905" y1="108" x2="905" y2="136" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(2 905.0 185.0)"><rect x="840" y="140" width="130" height="90" fill="var(--command)" filter="url(#sh)"/><text x="850" y="166" class="svg-kalam" font-size="13" fill="#1E2430">Kargoya Ver</text><text x="850" y="220" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">COMMAND</text></g>
+      <line x1="905" y1="230" x2="905" y2="266" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)"/>
+      <g transform="rotate(-1 905.0 315.0)"><rect x="840" y="270" width="130" height="90" fill="var(--event)" filter="url(#sh)"/><text x="850" y="296" class="svg-kalam" font-size="13" fill="#1E2430">Kargoya Verildi</text><text x="850" y="350" class="svg-sans" font-size="9" fill="#1E2430" opacity=".65" letter-spacing="1">EVENT</text></g>
+      <g transform="rotate(1 871.0 455.0)"><rect x="840" y="420" width="62" height="70" fill="var(--external)" filter="url(#sh)"/><text x="850" y="446" class="svg-kalam" font-size="11" fill="#1E2430">Shipment</text><text x="850" y="464" class="svg-kalam" font-size="11" fill="#1E2430">API</text><text x="850" y="480" class="svg-sans" font-size="7.5" fill="#1E2430" opacity=".65" letter-spacing=".5">EXTERNAL</text></g>
+      <g transform="rotate(-1 939.0 455.0)"><rect x="908" y="420" width="62" height="70" fill="var(--aggregate)" filter="url(#sh)"/><text x="918" y="446" class="svg-kalam" font-size="11" fill="#1E2430">Shipment</text><text x="918" y="480" class="svg-sans" font-size="7.5" fill="#1E2430" opacity=".65" letter-spacing=".5">AGGREGATE</text></g>
+      <line x1="871" y1="360" x2="871" y2="416" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#ar)" stroke-dasharray="5 4"/><text x="877.0" y="382.0" class="svg-mono" font-size="9" fill="var(--ink-faint)">barkod</text>
+      </svg>
     </div>
+    <p class="mono" style="margin-top:10px">Düz ok: tetikler · Kesik ok: bağlantılı not · Kesikli çerçeve: bounded context adayı · Kırmızı dikey çizgi: pivotal event</p>
   </section>
 
   <!-- ===== AGGREGATE DİYAGRAMI ===== -->
