@@ -83,9 +83,6 @@
   .eyebrow { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; margin-bottom: 4px; }
   .lead { font-size: 1.15rem; color: var(--ink-soft); max-width: 60ch; }
   .mono { font-family: "IBM Plex Mono", monospace; font-size: .82rem; color: var(--ink-faint); }
-  .highlight { background: linear-gradient(transparent 55%, var(--event) 55%); color: #1E2430; padding: 0 .15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .highlight { color: var(--ink); background: none; text-decoration: underline; text-decoration-color: var(--event); text-decoration-thickness: .14em; text-underline-offset: .08em; text-decoration-skip-ink: none; } }
-  :root[data-theme="dark"] .highlight { color: var(--ink); background: none; text-decoration: underline; text-decoration-color: var(--event); text-decoration-thickness: .14em; text-underline-offset: .08em; text-decoration-skip-ink: none; }
 
   section { margin-bottom: 60px; }
   .grid { display: grid; gap: 18px; }
@@ -226,7 +223,7 @@
   <header class="hero">
     <div>
       <div class="eyebrow">DDD · Knowledge crunching tamam · Sıra Event Storming'de</div>
-      <h1>Sipariş modelini birlikte <span class="highlight">Miro'ya çıkarıyoruz</span></h1>
+      <h1>Sipariş modelini birlikte Miro'ya çıkarıyoruz</h1>
       <p class="lead">OMS'in Create akışı için domain modeli henüz netleşmedi. Bu atölyede kod değil, olaylar konuşacağız: sipariş yaşamı boyunca <em>ne olur</em>, <em>kim tetikler</em>, <em>hangi kurallar devreye girer</em>. Miro üzerinde, gerektiği kadar oturumda ilerleyeceğiz. Bu broşür, ilk oturuma hazır gelmeniz için 10 dakikalık bir özet.</p>
       <p class="mono">Miro · Birden fazla oturum · Sarı event post-it'i ile başlıyoruz</p>
     </div>
