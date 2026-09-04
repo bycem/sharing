@@ -1,6 +1,13 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OMS Event Storming Rehberi</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+  img{max-width:100%}
+
   :root {
     --board: #F2F4F7;
     --board-line: #DDE2EA;
@@ -76,9 +83,9 @@
   .eyebrow { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; margin-bottom: 4px; }
   .lead { font-size: 1.15rem; color: var(--ink-soft); max-width: 60ch; }
   .mono { font-family: "IBM Plex Mono", monospace; font-size: .82rem; color: var(--ink-faint); }
-  .highlight { background: linear-gradient(transparent 55%, var(--event) 55%); color: var(--sticky-ink); padding: 0 .15em; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .highlight { color: var(--ink); } }
-  :root[data-theme="dark"] .highlight { color: var(--ink); }
+  .highlight { background: linear-gradient(transparent 55%, var(--event) 55%); color: #1E2430; padding: 0 .15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .highlight { color: var(--ink); background: none; text-decoration: underline; text-decoration-color: var(--event); text-decoration-thickness: .14em; text-underline-offset: .08em; text-decoration-skip-ink: none; } }
+  :root[data-theme="dark"] .highlight { color: var(--ink); background: none; text-decoration: underline; text-decoration-color: var(--event); text-decoration-thickness: .14em; text-underline-offset: .08em; text-decoration-skip-ink: none; }
 
   section { margin-bottom: 60px; }
   .grid { display: grid; gap: 18px; }
@@ -210,6 +217,8 @@
     .sticky:hover { transform: rotate(0deg) scale(1.03); }
   }
 </style>
+</head>
+<body>
 
 <div class="page">
 
@@ -745,3 +754,6 @@
     Kaynak: Alberto Brandolini, <em>Introducing EventStorming</em> (2021) · eventstorming.com · Bu broşür OMS sipariş oluşturma atölyesi için hazırlandı.
   </footer>
 </div>
+
+</body>
+</html>
