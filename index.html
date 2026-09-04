@@ -1,0 +1,747 @@
+<title>OMS Event Storming Rehberi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --board: #F2F4F7;
+    --board-line: #DDE2EA;
+    --ink: #1E2430;
+    --ink-soft: #55607A;
+    --ink-faint: #8A93A8;
+    --panel: #FFFFFF;
+    --panel-edge: #D5DBE6;
+    --sticky-ink: #1E2430;
+    --event: #FFF59A;
+    --command: #A8CBF7;
+    --actor: #F5C21B;
+    --policy: #FDB27A;
+    --aggregate: #B4E37A;
+    --notes: #FFFFFF;
+    --notes-edge: #4A5060;
+    --concern: #B9AEF5;
+    --constraint: #F79BE8;
+    --external: #8FE8DE;
+    --marker: #E8542C;
+    --ok: #2E8B57;
+    --shadow: 0 6px 14px rgba(30,36,48,.14), 0 1px 2px rgba(30,36,48,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --board: #1B1F27;
+      --board-line: #2A303C;
+      --ink: #EEF1F6;
+      --ink-soft: #B3BBCB;
+      --ink-faint: #7C8699;
+      --panel: #232935;
+      --panel-edge: #343C4B;
+      --notes: #F4F5F8;
+      --marker: #FF7A55;
+      --ok: #5CC08A;
+      --shadow: 0 8px 18px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --board: #1B1F27;
+    --board-line: #2A303C;
+    --ink: #EEF1F6;
+    --ink-soft: #B3BBCB;
+    --ink-faint: #7C8699;
+    --panel: #232935;
+    --panel-edge: #343C4B;
+    --notes: #F4F5F8;
+    --marker: #FF7A55;
+    --ok: #5CC08A;
+    --shadow: 0 8px 18px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--board);
+    background-image:
+      linear-gradient(var(--board-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--board-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .page { max-width: 1080px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  h1, h2 { font-family: "Kalam", "Comic Sans MS", cursive; font-weight: 700; text-wrap: balance; }
+  h1 { font-size: clamp(2.4rem, 6vw, 4rem); line-height: 1.05; margin: 0; }
+  h2 { font-size: 1.9rem; margin: 0 0 6px; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 6px; }
+  p { margin: 0 0 12px; max-width: 68ch; }
+  .eyebrow { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; margin-bottom: 4px; }
+  .lead { font-size: 1.15rem; color: var(--ink-soft); max-width: 60ch; }
+  .mono { font-family: "IBM Plex Mono", monospace; font-size: .82rem; color: var(--ink-faint); }
+  .highlight { background: linear-gradient(transparent 55%, var(--event) 55%); color: var(--sticky-ink); padding: 0 .15em; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .highlight { color: var(--ink); } }
+  :root[data-theme="dark"] .highlight { color: var(--ink); }
+
+  section { margin-bottom: 60px; }
+  .grid { display: grid; gap: 18px; }
+  .cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .cols-4, .cols-3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--panel-edge); padding: 20px 22px; }
+  .panel p:last-child { margin-bottom: 0; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; margin-bottom: 56px; }
+  .hero svg { width: 100%; height: auto; display: block; }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+
+  /* sticky */
+  .sticky {
+    background: var(--sticky-bg, var(--event));
+    color: var(--sticky-ink);
+    font-family: "Kalam", cursive;
+    font-size: 1.05rem; line-height: 1.25;
+    padding: 14px 12px;
+    box-shadow: var(--shadow);
+    transform: rotate(var(--tilt, -1.2deg));
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 118px;
+  }
+  .sticky small { font-family: "IBM Plex Sans", sans-serif; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+  .sticky.circle { border-radius: 50%; aspect-ratio: 1; align-items: center; justify-content: center; text-align: center; padding: 18px; }
+  .sticky.bubble { background: var(--notes); border: 1.5px solid var(--notes-edge); border-radius: 14px; position: relative; box-shadow: none; }
+  .sticky.bubble::after {
+    content: ""; position: absolute; left: 22px; bottom: -14px;
+    border: 8px solid transparent; border-top: 10px solid var(--notes-edge); border-left-width: 4px;
+  }
+  .sticky.bubble::before {
+    content: ""; position: absolute; left: 24px; bottom: -11px; z-index: 1;
+    border: 7px solid transparent; border-top: 9px solid var(--notes); border-left-width: 3px;
+  }
+
+  /* legend */
+  .legend { grid-template-columns: repeat(3, 1fr); align-items: start; }
+  .legend .sticky { min-height: 160px; }
+  .legend .desc { font-family: "IBM Plex Sans", sans-serif; font-size: .82rem; line-height: 1.4; opacity: .85; }
+  .legend .circle-wrap { display: grid; place-items: center; }
+  .legend .circle { width: 160px; min-height: 0; }
+  @media (max-width: 900px) { .legend { grid-template-columns: repeat(2, 1fr); } }
+
+  /* timeline */
+  .timeline { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .timeline::before { content: ""; position: absolute; left: 0; right: 0; top: 22px; height: 3px; background: var(--marker); opacity: .6; }
+  .phase { padding-top: 44px; position: relative; }
+  .phase .dot { position: absolute; top: 10px; left: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--marker); color: #fff; font-family: "Kalam"; font-weight: 700; display: grid; place-items: center; font-size: 1rem; }
+  .phase.done .dot { background: var(--ok); }
+  .phase .panel { height: 100%; }
+  .phase.now .panel { border-color: var(--marker); border-width: 2px; }
+  .badge { display: inline-block; font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--marker); }
+  .badge.done { color: var(--ok); }
+  .phase svg { width: 100%; height: auto; display: block; margin: 8px 0 10px; }
+  @media (max-width: 900px) { .timeline { grid-template-columns: repeat(2, 1fr); } .timeline::before { display: none; } }
+  @media (max-width: 560px) { .timeline { grid-template-columns: 1fr; } }
+
+  /* steps with board thumbnails */
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; counter-reset: step; }
+  ol.steps li { display: grid; grid-template-columns: 44px 1fr 260px; gap: 16px; align-items: center; background: var(--panel); border: 1px solid var(--panel-edge); padding: 14px 16px; }
+  ol.steps li::before { counter-increment: step; content: counter(step); font-family: "Kalam"; font-weight: 700; font-size: 1.7rem; line-height: 1; color: var(--marker); align-self: start; }
+  ol.steps p { margin: 4px 0 0; font-size: .95rem; color: var(--ink-soft); }
+  ol.steps .thumb { width: 260px; height: 120px; display: block; border: 1px solid var(--panel-edge); background: var(--board); }
+  @media (max-width: 760px) { ol.steps li { grid-template-columns: 44px 1fr; } ol.steps .thumb { grid-column: 2; width: 100%; height: auto; } }
+
+  /* rules */
+  .rules ul { padding-left: 0; list-style: none; margin: 0; display: grid; gap: 8px; }
+  .rules li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; font-size: .95rem; }
+  .rules li::before { font-family: "Kalam"; font-weight: 700; font-size: 1.2rem; line-height: 1.2; }
+  .rules .do li::before { content: "✓"; color: var(--ok); }
+  .rules .dont li::before { content: "✗"; color: var(--marker); }
+
+  /* good/bad event */
+  .compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; }
+  .compare .col { display: grid; gap: 12px; }
+  .compare .arrow { font-family: "Kalam"; font-size: 2.4rem; color: var(--ink-faint); text-align: center; }
+  .compare .sticky { min-height: 92px; position: relative; }
+  .compare .bad::after, .compare .good::after {
+    position: absolute; right: 8px; top: 6px; font-family: "Kalam"; font-weight: 700; font-size: 1.4rem;
+  }
+  .compare .bad::after { content: "✗"; color: var(--marker); }
+  .compare .good::after { content: "✓"; color: var(--ok); }
+  .compare .why { font-family: "IBM Plex Sans", sans-serif; font-size: .78rem; opacity: .75; }
+  @media (max-width: 640px) { .compare { grid-template-columns: 1fr; } .compare .arrow { transform: rotate(90deg); } }
+
+  /* example wall */
+  .wall { overflow-x: auto; padding: 8px 4px 16px; }
+  .wall-inner { display: grid; grid-auto-flow: column; grid-auto-columns: 150px; gap: 14px; min-width: max-content; }
+  .lane { display: grid; gap: 12px; align-content: start; }
+  .lane-label { font-family: "IBM Plex Mono", monospace; font-size: .72rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .08em; }
+  .wall .sticky { min-height: 96px; font-size: .95rem; }
+  .wall .sticky.circle { width: 96px; min-height: 0; justify-self: center; }
+  .pivot { position: relative; }
+  .pivot::before { content: ""; position: absolute; left: -7px; top: -8px; bottom: -8px; width: 3px; background: var(--marker); opacity: .7; }
+  .pivot .lane-label:first-child { color: var(--marker); }
+
+  /* diagrams */
+  .diagram { background: var(--panel); border: 1px solid var(--panel-edge); padding: 16px; overflow-x: auto; }
+  .diagram svg { width: 100%; height: auto; display: block; min-width: 520px; }
+  .svg-ink { fill: var(--ink); }
+  .svg-soft { fill: var(--ink-soft); }
+  .svg-faint { stroke: var(--ink-faint); }
+  .svg-mono { font-family: "IBM Plex Mono", monospace; }
+  .svg-kalam { font-family: "Kalam", cursive; font-weight: 700; }
+  .svg-sans { font-family: "IBM Plex Sans", sans-serif; }
+
+  /* roles */
+  .role { border-top: 5px solid var(--role-c, var(--event)); }
+  .role .who { font-family: "Kalam"; font-weight: 700; font-size: 1.25rem; }
+  .role ul { padding-left: 18px; margin: 6px 0 0; font-size: .92rem; color: var(--ink-soft); }
+
+  .glossary { display: grid; grid-template-columns: 180px 1fr; gap: 6px 16px; font-size: .92rem; }
+  .glossary dt { font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+  .glossary dd { margin: 0; color: var(--ink-soft); }
+  @media (max-width: 560px) { .glossary { grid-template-columns: 1fr; } .glossary dd { margin-bottom: 8px; } }
+
+  .checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .checklist li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+  .checklist li::before { content: ""; width: 16px; height: 16px; border: 2px solid var(--ink-faint); margin-top: 4px; }
+
+  footer { border-top: 1px solid var(--board-line); padding-top: 16px; font-size: .82rem; color: var(--ink-faint); }
+  @media (prefers-reduced-motion: no-preference) {
+    .sticky { transition: transform .18s ease; }
+    .sticky:hover { transform: rotate(0deg) scale(1.03); }
+  }
+</style>
+
+<div class="page">
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div>
+      <div class="eyebrow">DDD · Knowledge crunching tamam · Sıra Event Storming'de</div>
+      <h1>Sipariş modelini birlikte <span class="highlight">Miro'ya çıkarıyoruz</span></h1>
+      <p class="lead">OMS'in Create akışı için domain modeli henüz netleşmedi. Bu atölyede kod değil, olaylar konuşacağız: sipariş yaşamı boyunca <em>ne olur</em>, <em>kim tetikler</em>, <em>hangi kurallar devreye girer</em>. Miro üzerinde, gerektiği kadar oturumda ilerleyeceğiz. Bu broşür, ilk oturuma hazır gelmeniz için 10 dakikalık bir özet.</p>
+      <p class="mono">Miro · Birden fazla oturum · Sarı event post-it'i ile başlıyoruz</p>
+    </div>
+    <svg viewBox="0 0 520 300" aria-label="Miro board'dan bir kesit: aktör, komut, olay ve concern post-it'leri" role="img">
+      <rect x="0" y="0" width="520" height="300" fill="var(--panel)" stroke="var(--panel-edge)"/>
+      <g stroke="var(--board-line)" stroke-width="1">
+        <path d="M0 40H520M0 80H520M0 120H520M0 160H520M0 200H520M0 240H520M0 280H520M40 0V300M80 0V300M120 0V300M160 0V300M200 0V300M240 0V300M280 0V300M320 0V300M360 0V300M400 0V300M440 0V300M480 0V300"/>
+      </g>
+      <line x1="30" y1="200" x2="490" y2="200" stroke="var(--marker)" stroke-width="3" opacity=".6"/>
+      <text x="30" y="222" class="svg-mono svg-soft" font-size="10">ZAMAN →</text>
+      <g transform="translate(60 70)">
+        <circle cx="0" cy="0" r="34" fill="var(--actor)" stroke="#1E2430" stroke-width="1"/>
+        <text x="0" y="5" text-anchor="middle" class="svg-kalam" font-size="14" fill="#1E2430">Müşteri</text>
+      </g>
+      <g transform="translate(120 120) rotate(-2)">
+        <rect width="96" height="80" fill="var(--command)"/>
+        <text x="10" y="32" class="svg-kalam" font-size="13" fill="#1E2430">Siparişi</text>
+        <text x="10" y="50" class="svg-kalam" font-size="13" fill="#1E2430">Oluştur</text>
+      </g>
+      <text x="228" y="168" class="svg-kalam svg-soft" font-size="22">→</text>
+      <g transform="translate(250 112) rotate(1.5)">
+        <rect width="96" height="80" fill="var(--event)"/>
+        <text x="10" y="32" class="svg-kalam" font-size="13" fill="#1E2430">Sipariş</text>
+        <text x="10" y="50" class="svg-kalam" font-size="13" fill="#1E2430">Oluşturuldu</text>
+      </g>
+      <g transform="translate(372 100) rotate(3)">
+        <rect width="96" height="80" fill="var(--policy)"/>
+        <text x="8" y="26" class="svg-kalam" font-size="11" fill="#1E2430">Oluşunca</text>
+        <text x="8" y="42" class="svg-kalam" font-size="11" fill="#1E2430">ödemeyi</text>
+        <text x="8" y="58" class="svg-kalam" font-size="11" fill="#1E2430">başlat</text>
+      </g>
+      <g transform="translate(300 218) rotate(-4)">
+        <rect width="96" height="66" fill="var(--concern)"/>
+        <text x="8" y="26" class="svg-kalam" font-size="11" fill="#1E2430">Stok yoksa</text>
+        <text x="8" y="42" class="svg-kalam" font-size="11" fill="#1E2430">ne oluyor?</text>
+      </g>
+      <g transform="translate(410 222) rotate(2)">
+        <rect width="90" height="60" fill="var(--external)"/>
+        <text x="8" y="24" class="svg-kalam" font-size="10.5" fill="#1E2430">Ödeme</text>
+        <text x="8" y="40" class="svg-kalam" font-size="10.5" fill="#1E2430">Sağlayıcı</text>
+      </g>
+      <g transform="translate(140 218)">
+        <rect width="120" height="58" rx="10" fill="var(--notes)" stroke="var(--notes-edge)" stroke-width="1.5"/>
+        <path d="M22 58 L18 72 L36 58" fill="var(--notes)" stroke="var(--notes-edge)" stroke-width="1.5"/>
+        <text x="10" y="24" class="svg-sans" font-size="10" fill="#1E2430">Kupon ve hediye kartı</text>
+        <text x="10" y="40" class="svg-sans" font-size="10" fill="#1E2430">burada mı düşülüyor?</text>
+      </g>
+    </svg>
+  </header>
+
+  <!-- ===== NEDIR ===== -->
+  <section>
+    <div class="eyebrow">Nedir</div>
+    <h2>Event Storming, kısaca</h2>
+    <div class="grid cols-3">
+      <div class="panel">
+        <h3>Tanım</h3>
+        <p>Alberto Brandolini'nin 2013'te ortaya koyduğu, bir iş alanını <strong>domain event'ler</strong> üzerinden keşfetmeye yarayan atölye formatı. Araç: renkli post-it ve uzun bir duvar; bizde Miro board.</p>
+      </div>
+      <div class="panel">
+        <h3>Neden kod değil, post-it</h3>
+        <p>Domain bilgisi çoğunlukla geliştiricilerin değil, işi yapanların kafasında. Board, teknik olmayan ekibin de aynı dilde katkı vermesini sağlar. Model, tartışmaların artığı olarak ortaya çıkar.</p>
+      </div>
+      <div class="panel">
+        <h3>Bizim için hedef</h3>
+        <p>Knowledge crunching'de topladığımız bilgiyi zaman çizgisine dökmek: sipariş yaşam döngüsünün olaylarını, aktörlerini, dış sistemlerini ve <strong>bounded context adaylarını</strong> tek bir board'da görmek.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LEGEND ===== -->
+  <section>
+    <div class="eyebrow">Gramer · ekibimizin Miro şablonu</div>
+    <h2>Post-it renkleri ne anlatır</h2>
+    <p class="lead" style="margin-bottom:18px">Renk, notasyonun kendisi. Doğru renge yazmak, doğru soruyu sormak demek. Miro şablonundaki dokuz şekil bunlar.</p>
+    <div class="grid legend">
+      <div class="sticky" style="--sticky-bg:var(--event);--tilt:-1.5deg">
+        <div><small>Event · açık sarı</small><br>Sipariş Oluşturuldu</div>
+        <div class="desc">Olmuş bir şey. Geçmiş zaman, iş dilinde. Atölyenin temel taşı; ilk oturum neredeyse tamamen bu renkten oluşur.</div>
+      </div>
+      <div class="sticky" style="--sticky-bg:var(--command);--tilt:1deg">
+        <div><small>Command · mavi</small><br>Siparişi Oluştur</div>
+        <div class="desc">Olayı tetikleyen niyet. Emir kipi. Bir aktör ya da policy verir.</div>
+      </div>
+      <div class="circle-wrap">
+        <div class="sticky circle" style="--sticky-bg:var(--actor);--tilt:0deg">
+          <div><small>Actor · sarı daire</small><br>Müşteri</div>
+          <div class="desc">Komutu veren kişi ya da rol. Müşteri, satıcı, operasyon, sistem.</div>
+        </div>
+      </div>
+      <div class="sticky" style="--sticky-bg:var(--policy);--tilt:1.5deg">
+        <div><small>Policy · turuncu</small><br>Ödeme alındığında stok rezerve et</div>
+        <div class="desc">"Her ... olduğunda ... yap" kuralı. Bir olayı bir komuta bağlar.</div>
+      </div>
+      <div class="sticky" style="--sticky-bg:var(--aggregate);--tilt:-1deg">
+        <div><small>Aggregate · yeşil</small><br>Order</div>
+        <div class="desc">Komutu kabul edip olayı üreten tutarlılık sınırı. Big Picture'da nadir, sonraki seviyelerde ana kahraman.</div>
+      </div>
+      <div class="sticky bubble" style="--tilt:0deg">
+        <div><small>Notes · balon</small><br>Çok satıcılı sepet burada bölünüyor</div>
+        <div class="desc">Açıklama, örnek, bağlam. Bir post-it'in yanına iliştirilen serbest not.</div>
+      </div>
+      <div class="sticky" style="--sticky-bg:var(--concern);--tilt:-2.5deg">
+        <div><small>Concern · mor</small><br>Kısmi ödeme mümkün mü?</div>
+        <div class="desc">Belirsizlik, çelişki, soru. Tartışmayı kesip buraya yaz, devam et. Oturum sonunda sahip atanır.</div>
+      </div>
+      <div class="sticky" style="--sticky-bg:var(--constraint);--tilt:2deg">
+        <div><small>Constraint · pembe</small><br>Kargo kesildikten sonra adres değişmez</div>
+        <div class="desc">Her zaman geçerli iş kuralı, invariant. Aggregate sınırlarını çizerken en çok bunlara bakacağız.</div>
+      </div>
+      <div class="sticky" style="--sticky-bg:var(--external);--tilt:-1deg">
+        <div><small>External System · turkuaz</small><br>Shipment API</div>
+        <div class="desc">Kontrolümüz dışındaki sistem: Catalog, Shipment, ödeme sağlayıcı, GiftCard, Strapi. Olayı tetikleyebilir ya da olaydan etkilenir.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SEVİYELER ===== -->
+  <section>
+    <div class="eyebrow">Nerede duruyoruz</div>
+    <h2>Knowledge crunching bitti, üç seviyenin ilkindeyiz</h2>
+    <div class="timeline">
+      <div class="phase done">
+        <div class="dot">✓</div>
+        <div class="panel">
+          <span class="badge done">Tamamlandı</span>
+          <h3>Knowledge crunching</h3>
+          <svg viewBox="0 0 200 70" aria-hidden="true">
+            <rect width="200" height="70" fill="var(--board)"/>
+            <g fill="var(--notes)" stroke="var(--notes-edge)" stroke-width="1">
+              <rect x="10" y="10" width="52" height="34" rx="6"/><rect x="74" y="20" width="52" height="34" rx="6"/><rect x="138" y="8" width="52" height="34" rx="6"/>
+            </g>
+            <g stroke="var(--ink-faint)" stroke-width="1.5"><path d="M18 20h36M18 28h28M18 36h32M82 30h36M82 38h24M82 46h30M146 18h36M146 26h26M146 34h34"/></g>
+          </svg>
+          <p>Domain uzmanlarıyla görüşmeler, mevcut akışın ve terimlerin toplanması. Ham malzeme elimizde.</p>
+        </div>
+      </div>
+      <div class="phase now">
+        <div class="dot">1</div>
+        <div class="panel">
+          <span class="badge">Şimdi · bu oturumlar</span>
+          <h3>Big Picture Event Storming</h3>
+          <svg viewBox="0 0 200 70" aria-hidden="true">
+            <rect width="200" height="70" fill="var(--board)"/>
+            <line x1="8" y1="52" x2="192" y2="52" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+            <g fill="var(--event)">
+              <rect x="10" y="22" width="22" height="22" transform="rotate(-3 21 33)"/><rect x="36" y="20" width="22" height="22"/><rect x="62" y="24" width="22" height="22" transform="rotate(2 73 35)"/>
+              <rect x="98" y="21" width="22" height="22"/><rect x="124" y="23" width="22" height="22" transform="rotate(-2 135 34)"/><rect x="150" y="20" width="22" height="22"/><rect x="176" y="22" width="18" height="22"/>
+            </g>
+            <rect x="90" y="8" width="3" height="50" fill="var(--marker)" opacity=".7"/>
+            <circle cx="20" cy="12" r="6" fill="var(--actor)"/><circle cx="130" cy="12" r="6" fill="var(--actor)"/>
+            <rect x="60" y="4" width="16" height="12" fill="var(--concern)"/><rect x="160" y="4" width="16" height="12" fill="var(--concern)"/>
+          </svg>
+          <p>Tüm sipariş yaşam döngüsü tek zaman çizgisinde. Olaylar, aktörler, dış sistemler, pivotal event'ler, concern'ler ve context sınırı adayları.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">2</div>
+        <div class="panel">
+          <span class="badge" style="color:var(--ink-faint)">Sonraki</span>
+          <h3>Process Modeling</h3>
+          <svg viewBox="0 0 200 70" aria-hidden="true">
+            <rect width="200" height="70" fill="var(--board)"/>
+            <circle cx="18" cy="36" r="9" fill="var(--actor)"/>
+            <rect x="34" y="24" width="24" height="24" fill="var(--command)"/>
+            <rect x="66" y="24" width="24" height="24" fill="var(--event)"/>
+            <rect x="98" y="24" width="24" height="24" fill="var(--policy)"/>
+            <rect x="130" y="24" width="24" height="24" fill="var(--command)"/>
+            <rect x="162" y="24" width="24" height="24" fill="var(--event)"/>
+            <g class="svg-faint" stroke-width="1.2" fill="none"><path d="M27 36h6M58 36h7M90 36h7M122 36h7M154 36h7"/></g>
+          </svg>
+          <p>Sipariş oluşturma akışına yakınlaşma. Her olayın komutu, aktörü, policy'si ve baktığı bilgi.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">3</div>
+        <div class="panel">
+          <span class="badge" style="color:var(--ink-faint)">Sonraki</span>
+          <h3>Software Design</h3>
+          <svg viewBox="0 0 200 70" aria-hidden="true">
+            <rect width="200" height="70" fill="var(--board)"/>
+            <rect x="40" y="8" width="120" height="54" rx="4" fill="none" stroke="var(--ink-faint)" stroke-dasharray="4 3" stroke-width="1.5"/>
+            <rect x="80" y="18" width="40" height="34" fill="var(--aggregate)"/>
+            <rect x="12" y="24" width="20" height="22" fill="var(--command)"/>
+            <rect x="168" y="24" width="20" height="22" fill="var(--event)"/>
+            <rect x="48" y="44" width="26" height="12" fill="var(--constraint)"/>
+            <g class="svg-faint" stroke-width="1.2" fill="none"><path d="M32 35h46M120 35h46"/></g>
+          </svg>
+          <p>Aggregate'ler, invariant'lar ve entegrasyon olayları koda iner: Domain projesi, Command/Handler'lar, IntegrationEvents.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AKIŞ ===== -->
+  <section>
+    <div class="eyebrow">Akış · Big Picture</div>
+    <h2>Board oturumlar boyunca böyle dolacak</h2>
+    <p class="lead" style="margin-bottom:16px">Adımlar sırayla; bir adım bitmezse sonraki oturumda kaldığı yerden devam eder. Sağdaki küçük resimler, o adımın sonunda board'un neye benzeyeceğini gösterir.</p>
+    <ol class="steps">
+      <li>
+        <div><strong>Kaotik keşif</strong><p>Herkes aklına gelen her olayı sarıya yazıp board'a bırakır. Sıra, doğruluk, tekrar önemli değil. Mikrofon kapalı, herkes aynı anda Miro'ya sticky ekler.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <g fill="var(--event)">
+            <rect x="18" y="14" width="30" height="30" transform="rotate(-8 33 29)"/><rect x="70" y="30" width="30" height="30" transform="rotate(5 85 45)"/><rect x="40" y="66" width="30" height="30" transform="rotate(-3 55 81)"/>
+            <rect x="120" y="10" width="30" height="30" transform="rotate(12 135 25)"/><rect x="150" y="60" width="30" height="30" transform="rotate(-6 165 75)"/><rect x="200" y="22" width="30" height="30" transform="rotate(4 215 37)"/>
+            <rect x="215" y="72" width="30" height="30" transform="rotate(-10 230 87)"/><rect x="100" y="76" width="30" height="30" transform="rotate(7 115 91)"/><rect x="175" y="12" width="30" height="30" transform="rotate(-2 190 27)"/>
+          </g>
+        </svg>
+      </li>
+      <li>
+        <div><strong>Zaman çizgisini zorla</strong><p>Olayları soldan sağa kronolojik sıraya dizeriz. Tekrarları birleştir, belirsizlikleri mora yaz. Paralel akışlar için yatay şeritler (swimlane) aç: normal sipariş, çok satıcılı sepet, hediye kartı.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <line x1="10" y1="60" x2="250" y2="60" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+          <line x1="10" y1="100" x2="250" y2="100" stroke="var(--board-line)" stroke-width="1"/>
+          <g fill="var(--event)">
+            <rect x="14" y="30" width="26" height="26"/><rect x="46" y="30" width="26" height="26"/><rect x="78" y="30" width="26" height="26"/><rect x="110" y="30" width="26" height="26"/><rect x="142" y="30" width="26" height="26"/><rect x="174" y="30" width="26" height="26"/><rect x="206" y="30" width="26" height="26"/>
+            <rect x="110" y="70" width="26" height="26"/><rect x="142" y="70" width="26" height="26"/>
+          </g>
+          <rect x="176" y="72" width="20" height="16" fill="var(--concern)"/>
+          <text x="14" y="18" class="svg-mono" font-size="8" fill="var(--ink-faint)">ANA AKIŞ</text>
+          <text x="14" y="84" class="svg-mono" font-size="8" fill="var(--ink-faint)">ÇOK SATICILI</text>
+        </svg>
+      </li>
+      <li>
+        <div><strong>Aktörler ve dış sistemler</strong><p>Her olayın yanına: bunu kim yaptı, hangi sistem tetikledi? Sarı daire aktör; Catalog, Shipment, ödeme, GiftCard gibi dış sistemler turkuaz kart. Sistem tetikliyorsa aktör "zamanlayıcı"dır.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <line x1="10" y1="72" x2="250" y2="72" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+          <g fill="var(--event)">
+            <rect x="14" y="42" width="26" height="26"/><rect x="46" y="42" width="26" height="26"/><rect x="78" y="42" width="26" height="26"/><rect x="110" y="42" width="26" height="26"/><rect x="142" y="42" width="26" height="26"/><rect x="174" y="42" width="26" height="26"/><rect x="206" y="42" width="26" height="26"/>
+          </g>
+          <g fill="var(--actor)"><circle cx="27" cy="24" r="10"/><circle cx="123" cy="24" r="10"/><circle cx="219" cy="24" r="10"/></g>
+          <g fill="var(--external)"><rect x="62" y="84" width="40" height="18"/><rect x="160" y="84" width="46" height="18"/></g>
+          <text x="66" y="96" class="svg-sans" font-size="8" fill="#1E2430">Ödeme</text>
+          <text x="164" y="96" class="svg-sans" font-size="8" fill="#1E2430">Shipment</text>
+        </svg>
+      </li>
+      <li>
+        <div><strong>Pivotal event'ler</strong><p>Akışı fazlara bölen kritik olayları dikey çizgiyle işaretle. "Ödeme Alındı" öncesi ve sonrası farklı dünyalar. Bu çizgiler ileride bounded context sınırlarının ilk adayları.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <line x1="10" y1="72" x2="250" y2="72" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+          <g fill="var(--event)">
+            <rect x="14" y="42" width="26" height="26"/><rect x="46" y="42" width="26" height="26"/><rect x="88" y="42" width="26" height="26"/><rect x="120" y="42" width="26" height="26"/><rect x="152" y="42" width="26" height="26"/><rect x="194" y="42" width="26" height="26"/><rect x="226" y="42" width="26" height="26"/>
+          </g>
+          <rect x="78" y="14" width="4" height="92" fill="var(--marker)" opacity=".75"/>
+          <rect x="184" y="14" width="4" height="92" fill="var(--marker)" opacity=".75"/>
+          <text x="14" y="26" class="svg-mono" font-size="8" fill="var(--ink-faint)">SEPET</text>
+          <text x="92" y="26" class="svg-mono" font-size="8" fill="var(--ink-faint)">SİPARİŞ</text>
+          <text x="198" y="26" class="svg-mono" font-size="8" fill="var(--ink-faint)">TESLİMAT</text>
+        </svg>
+      </li>
+      <li>
+        <div><strong>Sesli yürüyüş (walkthrough)</strong><p>Bir kişi board'un başından sonuna kadar hikâyeyi anlatır, diğerleri boşlukları yakalar. Eksik olay, yanlış sıra, "aslında öyle olmuyor" anları burada çıkar. Her itiraz ya sticky ya concern.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <line x1="10" y1="72" x2="250" y2="72" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+          <g fill="var(--event)">
+            <rect x="14" y="42" width="26" height="26"/><rect x="46" y="42" width="26" height="26"/><rect x="78" y="42" width="26" height="26"/><rect x="142" y="42" width="26" height="26"/><rect x="174" y="42" width="26" height="26"/><rect x="206" y="42" width="26" height="26"/>
+          </g>
+          <rect x="110" y="42" width="26" height="26" fill="none" stroke="var(--marker)" stroke-dasharray="3 2" stroke-width="1.5"/>
+          <text x="116" y="60" class="svg-kalam" font-size="14" fill="var(--marker)">?</text>
+          <path d="M20 20 Q120 0 240 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <circle cx="240" cy="24" r="4" fill="var(--ink-faint)"/>
+          <rect x="30" y="88" width="24" height="18" fill="var(--concern)"/><rect x="180" y="88" width="24" height="18" fill="var(--concern)"/>
+        </svg>
+      </li>
+      <li>
+        <div><strong>Concern'ler ve constraint'ler</strong><p>Mor notları tek tek gez: karar verildi mi, sahibi kim, ne zaman? Konuşurken ortaya çıkan "asla / her zaman" cümlelerini pembeye yaz. Pembeler sonraki seviyede aggregate sınırlarını belirleyecek.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <line x1="10" y1="72" x2="250" y2="72" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+          <g fill="var(--event)">
+            <rect x="14" y="42" width="26" height="26"/><rect x="46" y="42" width="26" height="26"/><rect x="78" y="42" width="26" height="26"/><rect x="110" y="42" width="26" height="26"/><rect x="142" y="42" width="26" height="26"/><rect x="174" y="42" width="26" height="26"/><rect x="206" y="42" width="26" height="26"/>
+          </g>
+          <g fill="var(--concern)"><rect x="40" y="10" width="26" height="22"/><rect x="150" y="10" width="26" height="22"/></g>
+          <g fill="var(--constraint)"><rect x="90" y="84" width="30" height="22"/><rect x="200" y="84" width="30" height="22"/></g>
+          <text x="46" y="24" class="svg-kalam" font-size="11" fill="#1E2430">?</text>
+          <text x="156" y="24" class="svg-kalam" font-size="11" fill="#1E2430">?</text>
+          <text x="97" y="99" class="svg-kalam" font-size="10" fill="#1E2430">!</text>
+          <text x="207" y="99" class="svg-kalam" font-size="10" fill="#1E2430">!</text>
+        </svg>
+      </li>
+      <li>
+        <div><strong>Context sınırları ve kapanış</strong><p>Pivotal çizgilere ve dil değişimlerine bakıp bounded context adaylarını daire içine al: Orders, Cancels, Refunds, CartSplits, Shipping. Miro board'un o anki halini frame olarak kaydet, çıktıları yaz.</p></div>
+        <svg class="thumb" viewBox="0 0 260 120" aria-hidden="true">
+          <line x1="10" y1="72" x2="250" y2="72" stroke="var(--marker)" stroke-width="2" opacity=".6"/>
+          <g fill="var(--event)">
+            <rect x="14" y="42" width="26" height="26"/><rect x="46" y="42" width="26" height="26"/><rect x="88" y="42" width="26" height="26"/><rect x="120" y="42" width="26" height="26"/><rect x="152" y="42" width="26" height="26"/><rect x="194" y="42" width="26" height="26"/><rect x="226" y="42" width="26" height="26"/>
+          </g>
+          <g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 3">
+            <rect x="8" y="30" width="70" height="50" rx="10"/><rect x="82" y="30" width="102" height="50" rx="10"/><rect x="188" y="30" width="66" height="50" rx="10"/>
+          </g>
+          <text x="14" y="98" class="svg-kalam" font-size="10" fill="var(--ink)">Cart</text>
+          <text x="88" y="98" class="svg-kalam" font-size="10" fill="var(--ink)">Orders</text>
+          <text x="194" y="98" class="svg-kalam" font-size="10" fill="var(--ink)">Shipping</text>
+        </svg>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ===== İYİ / KÖTÜ EVENT ===== -->
+  <section>
+    <div class="eyebrow">Yazım</div>
+    <h2>İyi bir event nasıl yazılır</h2>
+    <p class="lead" style="margin-bottom:18px">Sarı post-it'e yazdığınız şey üç testi geçmeli: geçmiş zamanda mı, iş dilinde mi, gerçekten olmuş bir şeyi mi anlatıyor?</p>
+    <div class="panel compare">
+      <div class="col">
+        <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:-1deg">Sipariş kaydedildi<div class="why">Teknik olay. İş için ne değişti?</div></div>
+        <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:1deg">Sipariş oluştur<div class="why">Emir kipi. Bu bir komut, maviye ait.</div></div>
+        <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:-2deg">OrderStatus = 3<div class="why">Kodun dili. Domain uzmanı itiraz edemez.</div></div>
+        <div class="sticky bad" style="--sticky-bg:var(--event);--tilt:1.5deg>Sipariş süreci<div class="why">Olay değil, konu başlığı.</div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="col">
+        <div class="sticky good" style="--sticky-bg:var(--event);--tilt:1deg">Sipariş Oluşturuldu<div class="why">Geçmiş zaman, iş dili.</div></div>
+        <div class="sticky good" style="--sticky-bg:var(--event);--tilt:-1deg">Ödeme Reddedildi<div class="why">Hata yolu da olaydır.</div></div>
+        <div class="sticky good" style="--sticky-bg:var(--event);--tilt:2deg">Sipariş Satıcıya İletildi<div class="why">Kim için ne değişti, belli.</div></div>
+        <div class="sticky good" style="--sticky-bg:var(--event);--tilt:-1.5deg">Kargo Barkodu Üretildi<div class="why">Somut, tek bir an.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ÖRNEK DUVAR ===== -->
+  <section>
+    <div class="eyebrow">Örnek</div>
+    <h2>Sipariş oluşturma board'u böyle görünebilir</h2>
+    <p class="lead" style="margin-bottom:12px">Tartışmayı başlatmak için hazırlanmış örnek; dokuz kart tipinin hepsi burada. Doğru olduğu için değil, itiraz edilebilsin diye burada. Kırmızı çizgi pivotal event'i işaretliyor.</p>
+    <div class="wall">
+      <div class="wall-inner">
+        <div class="lane">
+          <div class="lane-label">Aktör</div>
+          <div class="sticky circle" style="--sticky-bg:var(--actor);--tilt:0deg">Müşteri</div>
+          <div class="lane-label">Komut</div>
+          <div class="sticky" style="--sticky-bg:var(--command);--tilt:-1deg">Sepeti Onayla</div>
+          <div class="lane-label">Olay</div>
+          <div class="sticky" style="--sticky-bg:var(--event);--tilt:1deg">Sepet Onaylandı</div>
+          <div class="lane-label">Not</div>
+          <div class="sticky bubble" style="--tilt:-1deg;font-size:.85rem">Kupon ve kargo indirimi burada hesaplanıyor</div>
+        </div>
+        <div class="lane">
+          <div class="lane-label">Policy</div>
+          <div class="sticky" style="--sticky-bg:var(--policy);--tilt:-2deg;font-size:.85rem">Sepet onaylanınca siparişi oluştur</div>
+          <div class="lane-label">Komut</div>
+          <div class="sticky" style="--sticky-bg:var(--command);--tilt:2deg">Siparişi Oluştur</div>
+          <div class="lane-label">Olay</div>
+          <div class="sticky" style="--sticky-bg:var(--event);--tilt:-1deg">Sipariş Oluşturuldu</div>
+          <div class="lane-label">Constraint</div>
+          <div class="sticky" style="--sticky-bg:var(--constraint);--tilt:1deg;font-size:.85rem">Toplam tutar, kalem toplamına eşit olmalı</div>
+          <div class="lane-label">Aggregate</div>
+          <div class="sticky" style="--sticky-bg:var(--aggregate);--tilt:-1deg">Order<br><small>OrderItem'ları kapsar</small></div>
+        </div>
+        <div class="lane pivot">
+          <div class="lane-label">Pivotal · External</div>
+          <div class="sticky" style="--sticky-bg:var(--external);--tilt:-1deg;min-height:80px">Ödeme Sağlayıcı</div>
+          <div class="lane-label">Komut</div>
+          <div class="sticky" style="--sticky-bg:var(--command);--tilt:-2deg">Ödemeyi Tahsil Et</div>
+          <div class="lane-label">Olay</div>
+          <div class="sticky" style="--sticky-bg:var(--event);--tilt:2deg">Ödeme Alındı</div>
+          <div class="lane-label">Concern</div>
+          <div class="sticky" style="--sticky-bg:var(--concern);--tilt:-3deg;font-size:.85rem">Ödeme başarısız olursa sipariş silinir mi, iptal mi?</div>
+        </div>
+        <div class="lane">
+          <div class="lane-label">Policy</div>
+          <div class="sticky" style="--sticky-bg:var(--policy);--tilt:2deg;font-size:.85rem">Ödeme alınınca satıcıya ilet</div>
+          <div class="lane-label">Komut</div>
+          <div class="sticky" style="--sticky-bg:var(--command);--tilt:1deg">Siparişi Satıcıya Aç</div>
+          <div class="lane-label">Olay</div>
+          <div class="sticky" style="--sticky-bg:var(--event);--tilt:-1deg">Sipariş Satıcıya İletildi</div>
+          <div class="lane-label">Concern</div>
+          <div class="sticky" style="--sticky-bg:var(--concern);--tilt:2deg;font-size:.85rem">Çok satıcılı sepet burada mı bölünüyor?</div>
+        </div>
+        <div class="lane">
+          <div class="lane-label">Aktör</div>
+          <div class="sticky circle" style="--sticky-bg:var(--actor);--tilt:0deg">Satıcı</div>
+          <div class="lane-label">Komut</div>
+          <div class="sticky" style="--sticky-bg:var(--command);--tilt:2deg">Kargoya Ver</div>
+          <div class="lane-label">Olay</div>
+          <div class="sticky" style="--sticky-bg:var(--event);--tilt:1deg">Kargoya Verildi</div>
+          <div class="lane-label">External</div>
+          <div class="sticky" style="--sticky-bg:var(--external);--tilt:1deg;min-height:80px">Shipment API<br><small>barkod üretir</small></div>
+          <div class="lane-label">Aggregate</div>
+          <div class="sticky" style="--sticky-bg:var(--aggregate);--tilt:1deg">Shipment<br><small>aday</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AGGREGATE DİYAGRAMI ===== -->
+  <section>
+    <div class="eyebrow">İleriye bakış</div>
+    <h2>Board'dan koda giden yol</h2>
+    <p class="lead" style="margin-bottom:14px">Bu oturumlarda aggregate çizmeyeceğiz ama nereye vardığımızı bilmek yazdıklarımızı keskinleştirir. Sol taraf Miro'da çıkanlar, sağ taraf Domain projesinde karşılıkları.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 900 300" role="img" aria-label="Post-it türlerinin koddaki karşılıkları">
+        <text x="20" y="28" class="svg-mono svg-soft" font-size="12">MIRO</text>
+        <text x="560" y="28" class="svg-mono svg-soft" font-size="12">KOD · PttAvm.Oms.Domain / Application</text>
+        <line x1="450" y1="40" x2="450" y2="290" stroke="var(--panel-edge)" stroke-dasharray="4 4"/>
+
+        <g transform="translate(20 50)"><circle cx="30" cy="30" r="28" fill="var(--actor)"/><text x="30" y="35" text-anchor="middle" class="svg-kalam" font-size="12" fill="#1E2430">Müşteri</text></g>
+        <g transform="translate(110 44)"><rect width="90" height="70" fill="var(--command)"/><text x="10" y="30" class="svg-kalam" font-size="12" fill="#1E2430">Siparişi</text><text x="10" y="48" class="svg-kalam" font-size="12" fill="#1E2430">Oluştur</text></g>
+        <g transform="translate(230 44)"><rect width="90" height="70" fill="var(--aggregate)"/><text x="10" y="42" class="svg-kalam" font-size="14" fill="#1E2430">Order</text></g>
+        <g transform="translate(350 44)"><rect width="90" height="70" fill="var(--event)"/><text x="10" y="30" class="svg-kalam" font-size="12" fill="#1E2430">Sipariş</text><text x="10" y="48" class="svg-kalam" font-size="12" fill="#1E2430">Oluşturuldu</text></g>
+        <g transform="translate(110 140)"><rect width="90" height="60" fill="var(--policy)"/><text x="8" y="24" class="svg-kalam" font-size="11" fill="#1E2430">Oluşunca</text><text x="8" y="40" class="svg-kalam" font-size="11" fill="#1E2430">ödemeyi başlat</text></g>
+        <g transform="translate(230 140)"><rect width="90" height="60" fill="var(--constraint)"/><text x="8" y="24" class="svg-kalam" font-size="11" fill="#1E2430">Tutar = kalem</text><text x="8" y="40" class="svg-kalam" font-size="11" fill="#1E2430">toplamı</text></g>
+        <g transform="translate(350 140)"><rect width="90" height="60" fill="var(--concern)"/><text x="8" y="24" class="svg-kalam" font-size="11" fill="#1E2430">Kısmi ödeme</text><text x="8" y="40" class="svg-kalam" font-size="11" fill="#1E2430">olur mu?</text></g>
+        <g transform="translate(20 140)"><rect width="70" height="60" fill="var(--external)"/><text x="8" y="26" class="svg-kalam" font-size="11" fill="#1E2430">Shipment</text><text x="8" y="42" class="svg-kalam" font-size="11" fill="#1E2430">API</text></g>
+        <g transform="translate(20 230)"><rect width="130" height="50" rx="8" fill="var(--notes)" stroke="var(--notes-edge)" stroke-width="1.5"/><text x="10" y="22" class="svg-sans" font-size="10" fill="#1E2430">Ödeme başarısızsa</text><text x="10" y="38" class="svg-sans" font-size="10" fill="#1E2430">sipariş iptal olur</text></g>
+
+        <g class="svg-mono" font-size="12">
+          <g transform="translate(470 58)"><rect width="16" height="16" fill="var(--command)"/><text x="26" y="13" class="svg-ink">CreateOrderCommand + Handler + Validator</text></g>
+          <g transform="translate(470 92)"><rect width="16" height="16" fill="var(--aggregate)"/><text x="26" y="13" class="svg-ink">Order : IAggregateRoot (Domain/Orders)</text></g>
+          <g transform="translate(470 126)"><rect width="16" height="16" fill="var(--event)"/><text x="26" y="13" class="svg-ink">OrderCreatedEvent → IntegrationEvents</text></g>
+          <g transform="translate(470 160)"><rect width="16" height="16" fill="var(--policy)"/><text x="26" y="13" class="svg-ink">Domain event handler / consumer</text></g>
+          <g transform="translate(470 194)"><rect width="16" height="16" fill="var(--constraint)"/><text x="26" y="13" class="svg-ink">Invariant: aggregate içinde guard + unit test</text></g>
+          <g transform="translate(470 228)"><circle cx="8" cy="8" r="8" fill="var(--actor)"/><text x="26" y="13" class="svg-ink">Endpoint / consumer (kimden geldiği)</text></g>
+          <g transform="translate(470 262)"><rect width="16" height="16" fill="var(--external)"/><text x="26" y="13" class="svg-ink">Infrastructure/Services typed HttpClient + Polly</text></g>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ===== KURALLAR ===== -->
+  <section>
+    <div class="eyebrow">Kurallar</div>
+    <h2>Dikkat edilecekler</h2>
+    <div class="grid cols-2 rules">
+      <div class="panel do">
+        <h3>Yapın</h3>
+        <ul>
+          <li>Olayları geçmiş zamanla, iş dilinde yazın: "Sipariş Oluşturuldu", "Ödeme Alındı".</li>
+          <li>Emin olmadığınız her şeyi mora yazıp devam edin. Concern bir başarısızlık değil, çıktının kendisi.</li>
+          <li>Herkes yazsın. Board'a en az 5 post-it koymadan izleyici moduna geçmek yok.</li>
+          <li>"Bu gerçekten oluyor mu, yoksa olmasını mı istiyoruz?" diye sorun. İkisini ayırın.</li>
+          <li>Hata ve istisna yollarını da çıkarın: stok yok, ödeme reddedildi, adres geçersiz.</li>
+          <li>Terimleri aynen kullanın. Bir kavrama üç isim veriliyorsa bu da bir concern.</li>
+          <li>Facilitator'ın uyarısına uyun; uzayan tartışma mora yazılır, oturum sonunda ele alınır.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <h3>Yapmayın</h3>
+        <ul>
+          <li>Tablo, kolon, DTO, endpoint konuşmayın. "OrderStatus enum'ına değer ekleyelim" bu oturumların konusu değil.</li>
+          <li>"Sipariş kaydedildi", "Kayıt güncellendi" gibi teknik olaylar yazmayın. İş için ne değişti?</li>
+          <li>Mevcut koda sadık kalmaya çalışmayın. Kod şu anki modeli anlatır, doğru modeli değil.</li>
+          <li>Bir olayı tek başınıza "doğru" diye sabitlemeyin. Domain uzmanı itiraz edemiyorsa eksik yazılmıştır.</li>
+          <li>Oturum sırasında başka sekmeye kaçmayın. Kod, Jira, mevcut diyagram yok. Sadece Miro.</li>
+          <li>Kimin haklı olduğunu tartışmayın. İki görüş varsa ikisini de yapıştırın, mor ekleyin.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ROLLER ===== -->
+  <section>
+    <div class="eyebrow">Roller</div>
+    <h2>Kim ne yapıyor</h2>
+    <div class="grid cols-4">
+      <div class="panel role" style="--role-c:var(--marker)">
+        <div class="who">Facilitator</div>
+        <ul><li>Adımları ve oturumlar arası devamlılığı yönetir</li><li>Tartışmayı concern'e çevirir</li><li>Kendisi model üretmez</li></ul>
+      </div>
+      <div class="panel role" style="--role-c:var(--actor)">
+        <div class="who">Domain uzmanları</div>
+        <ul><li>PO, operasyon, müşteri hizmetleri, muhasebe</li><li>Olayların gerçekliğini onaylar</li><li>İstisnaları hatırlatır</li></ul>
+      </div>
+      <div class="panel role" style="--role-c:var(--command)">
+        <div class="who">Geliştiriciler</div>
+        <ul><li>Soru sorar, varsayım aramaz</li><li>"Bu nasıl çalışır?" der, "şöyle yazarız" demez</li><li>Constraint'leri yakalar</li></ul>
+      </div>
+      <div class="panel role" style="--role-c:var(--aggregate)">
+        <div class="who">QA</div>
+        <ul><li>Uç senaryoları getirir</li><li>Her olay için "ya olmazsa?" sorar</li><li>Concern'leri test fikrine çevirir</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HAZIRLIK / ÇIKTI ===== -->
+  <section>
+    <div class="grid cols-2">
+      <div class="panel">
+        <div class="eyebrow">Gelmeden önce</div>
+        <h3>Hazırlık listesi</h3>
+        <ul class="checklist">
+          <li>Bir siparişin sepetten teslimata kadar başına gelen her şeyi zihninizde bir kez dolaşın.</li>
+          <li>Son 3 ayda yaşanmış, sipariş oluşturma ile ilgili en az 2 tuhaf vaka not edin.</li>
+          <li>Kendi rolünüzde "sipariş" deyince ne anladığınızı bir cümleyle yazın.</li>
+          <li>Kupon, kargo indirimi, hediye kartı, sigorta, çok satıcılı sepet: hangileri sizi ilgilendiriyor, düşünün.</li>
+          <li>Miro linkini önceden açıp sticky eklemeyi ve rengini değiştirmeyi bir kez deneyin (N tuşu sticky ekler). Kamera açık, ikinci ekran varsa Miro oraya.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Oturumlar tamamlanınca</div>
+        <h3>Beklenen çıktılar</h3>
+        <ul class="checklist">
+          <li>Kronolojik domain event listesi (Miro frame + yazılı)</li>
+          <li>Aktör ve dış sistem listesi</li>
+          <li>Pivotal event'ler ve bounded context adayları</li>
+          <li>Sahipli ve tarihli concern listesi</li>
+          <li>Constraint listesi; sonraki seviyede invariant'lara dönüşecek</li>
+          <li>Ortak dil sözlüğünün ilk sürümü</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SÖZLÜK ===== -->
+  <section>
+    <div class="eyebrow">Sözlük</div>
+    <h2>Oturumlarda geçecek terimler</h2>
+    <div class="panel">
+      <dl class="glossary">
+        <dt>Knowledge crunching</dt><dd>Domain uzmanlarıyla bilgi toplama ve sindirme. Bizde tamamlandı; Event Storming bu bilgiyi board'a döker.</dd>
+        <dt>Domain Event</dt><dd>İş açısından anlamlı, olmuş ve geri alınamaz bir şey. Geçmiş zaman.</dd>
+        <dt>Command</dt><dd>Bir şeyin olmasını isteme. Reddedilebilir; olay reddedilemez.</dd>
+        <dt>Policy</dt><dd>Olaydan komuta giden otomatik kural. "Her ... olduğunda ..."</dd>
+        <dt>Constraint</dt><dd>Her zaman geçerli iş kuralı. Aggregate'e girince "invariant" adını alır.</dd>
+        <dt>Concern</dt><dd>Cevabı olmayan soru, çelişki ya da ertelenen karar.</dd>
+        <dt>Aggregate</dt><dd>Birlikte tutarlı kalması gereken nesne kümesi. Tek bir kökü vardır, tek transaction'da değişir.</dd>
+        <dt>Pivotal Event</dt><dd>Akışı fazlara bölen kritik olay. Öncesi ve sonrası farklı kurallara tabidir.</dd>
+        <dt>Bounded Context</dt><dd>Bir modelin ve dilin geçerli olduğu sınır. Orders, Cancels, Refunds ayrı context adayları.</dd>
+        <dt>Ubiquitous Language</dt><dd>İş ve teknik ekibin aynı anlamda kullandığı terimler. Board'da çıkan isimler koda da böyle girer.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <footer>
+    Kaynak: Alberto Brandolini, <em>Introducing EventStorming</em> (2021) · eventstorming.com · Bu broşür OMS sipariş oluşturma atölyesi için hazırlandı.
+  </footer>
+</div>
