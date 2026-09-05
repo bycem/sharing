@@ -2,7 +2,10 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>APEX RUSH</title>
 <style>
   :root{ --accent:#ff7a1a; --accent2:#3bd4ff; }
@@ -68,6 +71,32 @@
   .pad b{ color:#3bd4ff; }
   #padStatus{ margin-top:18px; font-size:15px; letter-spacing:2px; padding:6px 14px; border-radius:20px; background:rgba(255,255,255,.08); }
   #padStatus.ok{ color:#2ee59d; background:rgba(46,229,157,.12); }
+  /* touch controls (phone / tablet) */
+  body{ touch-action:none; -webkit-tap-highlight-color:transparent; }
+  #touch{ position:absolute; inset:0; pointer-events:none; display:none; }
+  body.touch #touch{ display:block; }
+  body.touch #hint, body.touch .keys{ display:none; }
+  body.touch #bl{ bottom:auto; top:20px; left:24px; }
+  body.touch #tl{ left:24px; top:110px; }
+  body.touch #br{ right:24px; top:20px; bottom:auto; }
+  body.touch #br .speed{ font-size:56px; }
+  body.touch #br #rpm{ width:180px; }
+  body.touch #mapWrap{ right:auto; left:50%; transform:translateX(-50%); top:8px; }
+  body.touch #map{ width:120px; height:120px; }
+  .tb{ position:absolute; pointer-events:auto; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.35); color:#fff; font-weight:800; font-size:20px; letter-spacing:1px; user-select:none; -webkit-user-select:none; backdrop-filter:blur(3px); text-shadow:0 2px 6px rgba(0,0,0,.6); }
+  .tb.on{ background:rgba(255,210,59,.55); border-color:#ffd23b; }
+  .tb.sq{ border-radius:18px; }
+  #tLeft{ left:max(18px,env(safe-area-inset-left)); bottom:max(22px,env(safe-area-inset-bottom)); width:108px; height:108px; font-size:44px; }
+  #tRight{ left:calc(max(18px,env(safe-area-inset-left)) + 124px); bottom:max(22px,env(safe-area-inset-bottom)); width:108px; height:108px; font-size:44px; }
+  #tBrake{ right:max(18px,env(safe-area-inset-right)); bottom:max(22px,env(safe-area-inset-bottom)); width:104px; height:104px; background:rgba(255,59,59,.25); border-color:rgba(255,120,120,.6); }
+  #tNitro{ right:calc(max(18px,env(safe-area-inset-right)) + 120px); bottom:max(22px,env(safe-area-inset-bottom)); width:88px; height:88px; background:rgba(59,212,255,.25); border-color:rgba(120,220,255,.6); font-size:16px; }
+  #tHand{ right:calc(max(18px,env(safe-area-inset-right)) + 32px); bottom:calc(max(22px,env(safe-area-inset-bottom)) + 118px); width:84px; height:84px; font-size:15px; }
+  #tCam{ right:max(18px,env(safe-area-inset-right)); top:max(96px,env(safe-area-inset-top)); width:58px; height:44px; font-size:13px; }
+  #tPause{ right:calc(max(18px,env(safe-area-inset-right)) + 66px); top:max(96px,env(safe-area-inset-top)); width:58px; height:44px; font-size:18px; }
+  #rotate{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center; background:rgba(0,0,0,.85); font-size:26px; letter-spacing:2px; padding:30px; line-height:1.4; z-index:20; }
+  @media (orientation:portrait){ body.touch #rotate{ display:flex; } }
+  .btn.sm{ font-size:clamp(18px,3vh,24px); padding:10px 34px; letter-spacing:2px; margin:12px 8px 0; display:inline-block; }
+  .btn.ghost{ background:rgba(255,255,255,.12); color:#fff; box-shadow:none; }
   .keys{ margin-top:10px; font-size:13px; opacity:.5; letter-spacing:1px; }
 
   #padTest{ margin-top:10px; padding:8px 14px; border-radius:14px; background:rgba(0,0,0,.35); display:flex; flex-direction:column; align-items:center; gap:4px; }
@@ -94,6 +123,11 @@
 <div id="loading">YÜKLENİYOR…</div>
 <div id="ui">
   <div id="hudRoot" class="hidden">
+  <div id="touch">
+    <div class="tb" id="tLeft">◀</div><div class="tb" id="tRight">▶</div>
+    <div class="tb" id="tBrake">FREN</div><div class="tb" id="tNitro">NİTRO</div><div class="tb" id="tHand">DRİFT</div>
+    <div class="tb sq" id="tCam">KAMERA</div><div class="tb sq" id="tPause">❚❚</div>
+  </div>
     <div id="tl" class="hud">
       <div class="pos"><span id="posN">8</span><small>/<span id="posT">8</span></small></div>
       <div class="lap">TUR <span id="lapN">1</span>/<span id="lapT">3</span></div>
@@ -119,6 +153,8 @@
     </div>
   </div>
 
+  <div id="rotate">📱↻<br>TELEFONU YATAY ÇEVİR</div>
+
   <div id="menu" class="overlay">
     <div class="panel">
     <div class="title">APEX RUSH</div>
@@ -132,6 +168,7 @@
       <div id="driftLine">DRIFT TESTİ: çubuklara dokunma, 3 sn bekle</div>
       <div class="row" style="margin-top:4px"><div class="lab">ÖLÜ BÖLGE</div><div id="dzs" class="row" style="margin:0"></div><span style="font-size:12px;opacity:.5;letter-spacing:1px">L1 / R1</span></div>
     </div>
+    <div class="pad touchOnly" id="touchHint">Telefon: gaz otomatik · <b>◀ ▶</b> direksiyon · <b>FREN</b> · <b>NİTRO</b> · <b>DRİFT</b> el freni</div>
     <div class="pad">DualSense: <b>R2</b> gaz · <b>L2</b> fren · <b>Sol çubuk</b> direksiyon · <b>✕</b> el freni · <b>▢</b> nitro · <b>Sağ çubuk</b> kamera · <b>✕</b> başlat</div>
     <div class="keys">Klavye: ↑/W gaz · ↓/S fren · ←/→ direksiyon · Space el freni · Shift nitro · C kamera · IJKL kamera döndür · Enter başlat · M müzik</div>
     </div>
@@ -140,6 +177,7 @@
   <div id="pause" class="overlay hidden">
     <div class="panel">
     <div class="big2">DURAKLATILDI</div>
+    <div><div class="btn sm" id="resumeBtn">DEVAM</div><div class="btn sm ghost" id="menuBtn">MENÜ</div></div>
     <div class="pad">OPTIONS / ESC — devam · △ / R — menüye dön</div>
     </div>
   </div>
@@ -149,6 +187,7 @@
     <div class="big2" id="resultTitle">YARIŞ BİTTİ</div>
     <table class="res" id="resTable"></table>
     <div class="btn" id="againBtn">TEKRAR YARIŞ</div>
+    <div class="btn sm ghost" id="menuBtn2">MENÜ</div>
     <div class="pad">△ / Enter — tekrar · OPTIONS / Esc — menü</div>
     </div>
   </div>
@@ -268,7 +307,8 @@ function billboardTex(text,bg,fg){
 const canvas=$('gl');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
 const LITE=new URLSearchParams(location.search).has('lite');
-renderer.setPixelRatio(LITE?0.5:Math.min(devicePixelRatio,2));
+const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>1||new URLSearchParams(location.search).has('touch'); if(TOUCH) document.body.classList.add('touch');
+renderer.setPixelRatio(LITE?0.5:Math.min(devicePixelRatio,TOUCH?1.5:2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=!LITE; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
@@ -298,7 +338,7 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(2500,32,16),skyMat); scene.add
 
 const hemi=new THREE.HemisphereLight(0x9fc4ff,0x4a6a2a,0.55); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffd9b0,2.4); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.near=1; sun.shadow.camera.far=400;
+sun.shadow.mapSize.set(TOUCH?1024:2048,TOUCH?1024:2048); sun.shadow.camera.near=1; sun.shadow.camera.far=400;
 sun.shadow.camera.left=-90; sun.shadow.camera.right=90; sun.shadow.camera.top=90; sun.shadow.camera.bottom=-90; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.03;
 scene.add(sun); scene.add(sun.target);
 
@@ -329,20 +369,28 @@ for(const side of [-1,1]){
   const g=stripGeometry(N,2,true,(i,j)=>{ const d=offs[j]; const l=lateral(i,d); const red=Math.floor(i/5)%2===0; return {x:l.x,y:track.terrainY(i,d)+0.05,z:l.z,r:red?0.9:0.95,g:red?0.12:0.95,b:red?0.1:0.95}; });
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.8})); m.receiveShadow=true; scene.add(m);
 }
-// grass ribbon
+// grass: narrow ribbon next to the curbs (never wider than 0.7x the corner radius, so it cannot fold)
 {
-  const offs=[-60,-42,-30,-20,-14,-(ROAD_HALF+CURB_W),(ROAD_HALF+CURB_W),14,20,30,42,60];
-  // local max curvature (window) so inner-side offsets never fold over the road
+  const offs=[-14,-(ROAD_HALF+CURB_W),(ROAD_HALF+CURB_W),14];
   const kmax=new Array(N); for(let i=0;i<N;i++){ let m=0; for(let k=-40;k<=40;k++) m=Math.max(m,track.curvRaw[(i+k+N)%N],track.curv[(i+k+N)%N]); kmax[i]=m; }
   const g=stripGeometry(N,offs.length,true,(i,j)=>{ let d=offs[j]; const innerSide=d*track.curvS[i]>0; if(innerSide&&kmax[i]>1e-4){ const lim=0.7/kmax[i]; if(Math.abs(d)>lim) d=Math.sign(d)*Math.max(lim,ROAD_HALF+CURB_W+0.5); }
-    const l=lateral(i,d); const inner=Math.abs(d)<=ROAD_HALF+CURB_W+0.01; return {x:l.x,y:track.terrainY(i,d)-(inner?0.04:0.12),z:l.z,u:d/22,v:i*track.segLen/22}; });
-  // remove the middle quad (under the road)
-  const idx=g.getIndex().array; const keep=[]; const C=offs.length; for(let k=0;k<idx.length;k+=3){ const a=idx[k]%C,b=idx[k+1]%C,c=idx[k+2]%C; const mn=Math.min(a,b,c),mx=Math.max(a,b,c); if(mn===5&&mx===6) continue; keep.push(idx[k],idx[k+1],idx[k+2]); }
-  // bury any grass vertex that lands inside ANY road segment (hairpins / neighbouring legs)
-  { const pa=g.getAttribute('position'); for(let k=0;k<pa.count;k++){ const j=k%offs.length; if(j===5||j===6) continue; const x=pa.getX(k),z=pa.getZ(k); let bj=0,bd=Infinity; for(let i=0;i<N;i+=2){ const q=track.pts[i]; const dd=(q.x-x)**2+(q.z-z)**2; if(dd<bd){bd=dd;bj=i;} }
-      const sf=track.surface(x,z,bj); const pen=ROAD_HALF+CURB_W+1.2-Math.abs(sf.d); if(pen>0){ pa.setY(k,Math.min(pa.getY(k),sf.y-0.2-pen*0.6)); } } pa.needsUpdate=true; }
+    const l=lateral(i,d); const inner=Math.abs(d)<=ROAD_HALF+CURB_W+0.01; return {x:l.x,y:track.terrainY(i,d)-(inner?0.04:0.12),z:l.z,u:l.x/22,v:l.z/22}; });
+  const idx=g.getIndex().array; const keep=[]; const C=offs.length; for(let k=0;k<idx.length;k+=3){ const a=idx[k]%C,b=idx[k+1]%C,c=idx[k+2]%C; if(Math.min(a,b,c)===1&&Math.max(a,b,c)===2) continue; keep.push(idx[k],idx[k+1],idx[k+2]); }
+  { const pa=g.getAttribute('position'); for(let k=0;k<pa.count;k++){ const j=k%C; if(j===1||j===2) continue; const x=pa.getX(k),z=pa.getZ(k); const bj=track.nearest(x,z,null); const sf=track.surface(x,z,bj); const pen=ROAD_HALF+CURB_W+1.2-Math.abs(sf.d); if(pen>0) pa.setY(k,Math.min(pa.getY(k),sf.y-0.2-pen*0.6)); } pa.needsUpdate=true; }
   g.setIndex(keep); g.computeVertexNormals();
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:grassTex,roughness:1})); m.receiveShadow=true; scene.add(m); window.__grass=m;
+}
+// terrain: a regular heightfield (one height per x/z, so it can never cover the road); buried under the road and the ribbon
+{
+  let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity; for(const p of track.pts){ minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z); }
+  const PAD=140, CELL=4; const x0=Math.floor((minX-PAD)/CELL)*CELL, z0=Math.floor((minZ-PAD)/CELL)*CELL; const nx=Math.ceil((maxX+PAD-x0)/CELL)+1, nz=Math.ceil((maxZ+PAD-z0)/CELL)+1;
+  // spatial hash of track samples for fast nearest lookup
+  const HC=24, hash=new Map(); const hk=(cx,cz)=>cx*100003+cz; for(let i=0;i<N;i++){ const p=track.pts[i]; const k=hk(Math.floor(p.x/HC),Math.floor(p.z/HC)); if(!hash.has(k)) hash.set(k,[]); hash.get(k).push(i); }
+  const nearestFast=(x,z)=>{ const cx=Math.floor(x/HC),cz=Math.floor(z/HC); let best=-1,bd=Infinity; for(let r=1;r<=3&&best<0;r++){ for(let ax=cx-r;ax<=cx+r;ax++)for(let az=cz-r;az<=cz+r;az++){ const l=hash.get(hk(ax,az)); if(!l) continue; for(const i of l){ const p=track.pts[i]; const dd=(p.x-x)**2+(p.z-z)**2; if(dd<bd){bd=dd;best=i;} } } } return best; };
+  const g=stripGeometry(nz,nx,false,(iz,ix)=>{ const x=x0+ix*CELL, z=z0+iz*CELL; const i=nearestFast(x,z); let y;
+    if(i<0) y=-0.12; else { const sf=track.surface(x,z,i); const ad=Math.abs(sf.d); if(ad<=ROAD_HALF+CURB_W+2) y=sf.y-0.8; else { const t=track.terrainY(i,sf.d)-0.12; y=t-0.7*(1-smoothstep(ROAD_HALF+CURB_W+2,16,ad)); } }
+    return {x,y,z,u:x/22,v:z/22}; });
+  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:grassTex,roughness:1})); m.receiveShadow=true; scene.add(m); window.__terrain=m;
 }
 // ground plane
 {
@@ -793,6 +841,13 @@ let padConnected=false;
 addEventListener('gamepadconnected',e=>{ padConnected=true; $('padStatus').textContent='🎮 '+(e.gamepad.id.split('(')[0].trim()||'Kontrolcü')+' BAĞLI'; $('padStatus').classList.add('ok'); });
 addEventListener('gamepaddisconnected',()=>{ padConnected=false; $('padStatus').textContent='🎮 KONTROLCÜ BAĞLANTISI KESİLDİ'; $('padStatus').classList.remove('ok'); });
 const prevBtn={}; let lastGp=null;
+/* ---- touch controls ---- */
+const tc={left:false,right:false,brake:false,nitro:false,hand:false,camP:false,pauseP:false}; let touchSteer=0;
+{ const hold=(id,key)=>{ const el=$(id); const on=e=>{ e.preventDefault(); tc[key]=true; el.classList.add('on'); snd.init(); }; const off=e=>{ e.preventDefault(); tc[key]=false; el.classList.remove('on'); };
+    el.addEventListener('pointerdown',on); el.addEventListener('pointerup',off); el.addEventListener('pointercancel',off); el.addEventListener('pointerleave',off); el.addEventListener('contextmenu',e=>e.preventDefault()); };
+  hold('tLeft','left'); hold('tRight','right'); hold('tBrake','brake'); hold('tNitro','nitro'); hold('tHand','hand');
+  const tap=(id,key)=>{ const el=$(id); el.addEventListener('pointerdown',e=>{ e.preventDefault(); tc[key]=true; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),150); }); };
+  tap('tCam','camP'); tap('tPause','pauseP'); }
 function getPad(){ const gps=navigator.getGamepads?navigator.getGamepads():[]; for(const g of gps) if(g&&g.connected) return g; return null; }
 function readInput(){
   const inp={steer:0,throttle:0,brake:0,camX:0,camY:0,handbrake:false,nitro:false,camP:false,pauseP:false,confirmP:false,backP:false,leftP:false,rightP:false,upP:false,downP:false,musicP:false,any:false};
@@ -804,8 +859,17 @@ function readInput(){
   const kp=(code,name)=>{ const k='k_'+code; const now=!!keys[code]; if(now&&!prevBtn[k]) inp[name]=true; prevBtn[k]=now; };
   kp('KeyC','camP'); kp('Escape','pauseP'); kp('Enter','confirmP'); kp('KeyR','backP'); kp('ArrowLeft','leftP'); kp('ArrowRight','rightP'); kp('ArrowUp','upP'); kp('ArrowDown','downP'); kp('KeyM','musicP'); kp('KeyT','stickP'); kp('BracketLeft','dzDownP'); kp('BracketRight','dzUpP');
   if(inp.throttle||inp.brake||inp.handbrake) inp.any=true;
-  // gamepad
+  // touch: auto throttle, ramped steering
   const gp=getPad(); lastGp=gp;
+  if(TOUCH&&!gp){
+    const want=(tc.right?1:0)-(tc.left?1:0); touchSteer+=clamp(want-touchSteer,-0.12,0.12); if(Math.abs(touchSteer)<0.02&&want===0) touchSteer=0;
+    if(Math.abs(touchSteer)>0.01) inp.steer=touchSteer;
+    if(state!=='menu'){ inp.throttle=tc.brake?0:1; inp.brake=tc.brake?1:0; }
+    if(tc.nitro) inp.nitro=true; if(tc.hand) inp.handbrake=true;
+    if(tc.camP){ inp.camP=true; tc.camP=false; } if(tc.pauseP){ inp.pauseP=true; tc.pauseP=false; }
+    if(tc.left||tc.right||tc.brake||tc.nitro||tc.hand) inp.any=true;
+  }
+  // gamepad
   if(gp){
     if(!padConnected){ padConnected=true; $('padStatus').textContent='🎮 '+(gp.id.split('(')[0].trim()||'Kontrolcü')+' BAĞLI'; $('padStatus').classList.add('ok'); }
     const ax=gp.axes[0]||0; const dz=DEADZONES[selDz]; if(Math.abs(ax)>dz){ const v=(Math.abs(ax)-dz)/(1-dz); inp.steer=Math.sign(ax)*Math.pow(v,1.4); }
@@ -898,6 +962,10 @@ function buildMenu(){
 buildMenu();
 $('playBtn').onclick=()=>startRace();
 $('againBtn').onclick=()=>startRace();
+$('menuBtn').onclick=()=>{ if(snd.ctx) snd.ctx.resume(); toMenu(); };
+$('menuBtn2').onclick=()=>toMenu();
+$('resumeBtn').onclick=()=>{ if(state==='paused'){ state='race'; $('pause').classList.add('hidden'); if(snd.ctx) snd.ctx.resume(); } };
+if(!TOUCH) $('touchHint').style.display='none';
 
 function setupCars(){
   for(const c of cars) scene.remove(c.mesh); cars.length=0;
@@ -912,6 +980,7 @@ function gridCars(){
 }
 function startRace(){
   snd.init(); if(snd.ctx.state==='suspended') snd.ctx.resume();
+  if(TOUCH){ try{ const el=document.documentElement; const fs=el.requestFullscreen||el.webkitRequestFullscreen; if(fs&&!document.fullscreenElement) fs.call(el).catch(()=>{}); }catch(e){} try{ screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }
   setupCars(); gridCars(); state='countdown'; countT=0; raceTime=0; lastCount=-1;
   $('menu').classList.add('hidden'); $('results').classList.add('hidden'); $('pause').classList.add('hidden'); $('hudRoot').classList.remove('hidden');
   $('lapT').textContent=LAPS; $('posT').textContent=cars.length; setStartLights(0,false);
@@ -958,7 +1027,7 @@ function updateCamera(dt){
     if(camMode===2){ target=new THREE.Vector3(c.pos.x+F.x*0.9,c.pos.y+1.15,c.pos.z+F.z*0.9); look=new THREE.Vector3(c.pos.x+F.x*30,c.pos.y+0.6,c.pos.z+F.z*30); camSnap=true; }
     else { const dist=(camMode===0?7.5:5.2)+sp*0.03+(c.nitroActive?1.2:0); const h=((camMode===0?2.9:2.0)+sp*0.008)*(1+orbitPitch*1.6);
       const cy=Math.cos(orbitYaw), sy=Math.sin(orbitYaw); const ox=fx*cy-fz*sy, oz=fx*sy+fz*cy; // rotated forward
-      target=new THREE.Vector3(c.pos.x-ox*dist+up.x*h,c.pos.y+up.y*h,c.pos.z-oz*dist+up.z*h); target.y=Math.max(target.y,c.pos.y+1.0);
+      target=new THREE.Vector3(c.pos.x-ox*dist+up.x*h,c.pos.y+up.y*h,c.pos.z-oz*dist+up.z*h); target.y=Math.max(target.y,c.pos.y+1.0); { const gi=track.nearest(target.x,target.z,c.idx); const gs=track.surface(target.x,target.z,gi); const gy=Math.abs(gs.d)<=14?gs.y:track.terrainY(gi,gs.d); target.y=Math.max(target.y,gy+0.9); }
       const lookAhead=5*Math.max(0,cy); look=new THREE.Vector3(c.pos.x+fx*lookAhead,c.pos.y+1.1,c.pos.z+fz*lookAhead); }
     const targetFov=camMode===2?80:lerp(66,84,clamp(sp/90,0,1))+(c.nitroActive?6:0); camera.fov=lerp(camera.fov,targetFov,1-Math.exp(-dt*4));
   }
