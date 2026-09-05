@@ -72,7 +72,11 @@
   #padStatus{ margin-top:18px; font-size:15px; letter-spacing:2px; padding:6px 14px; border-radius:20px; background:rgba(255,255,255,.08); }
   #padStatus.ok{ color:#2ee59d; background:rgba(46,229,157,.12); }
   /* touch controls (phone / tablet) */
-  body{ touch-action:none; -webkit-tap-highlight-color:transparent; }
+  /* iOS: cift dokunma zoom / pinch zoom / secim tamamen kapali */
+  *{ touch-action:manipulation; }
+  html,body{ touch-action:none; overscroll-behavior:none; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; }
+  canvas#gl, #touch, .tb, #ui{ touch-action:none; -webkit-touch-callout:none; }
+  .btn{ touch-action:manipulation; -webkit-touch-callout:none; }
   #touch{ position:absolute; inset:0; pointer-events:none; display:none; }
   body.touch #touch{ display:block; }
   body.touch #hint, body.touch .keys{ display:none; }
@@ -854,6 +858,25 @@ let padConnected=false;
 addEventListener('gamepadconnected',e=>{ padConnected=true; $('padStatus').textContent='🎮 '+(e.gamepad.id.split('(')[0].trim()||'Kontrolcü')+' BAĞLI'; $('padStatus').classList.add('ok'); });
 addEventListener('gamepaddisconnected',()=>{ padConnected=false; $('padStatus').textContent='🎮 KONTROLCÜ BAĞLANTISI KESİLDİ'; $('padStatus').classList.remove('ok'); });
 const prevBtn={}; let lastGp=null;
+/* ---- iOS zoom engelleme (cift dokunma / pinch / gesture) ---- */
+{ const stop=e=>{ e.preventDefault(); };
+  // Safari pinch-zoom jestleri
+  for(const t of ['gesturestart','gesturechange','gestureend']) document.addEventListener(t,stop,{passive:false});
+  // cok parmakli dokunuslarda zoom
+  document.addEventListener('touchstart',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
+  document.addEventListener('touchmove',e=>{ if(e.touches.length>1||e.scale&&e.scale!==1) e.preventDefault(); },{passive:false});
+  // cift dokunma ile zoom: 350ms icinde ikinci dokunusun varsayilan davranisini iptal et
+  let lastTap=0;
+  document.addEventListener('touchend',e=>{ const now=Date.now();
+    // .btn menu ogeleri click ile calisir; onlarda preventDefault etme (touch-action:manipulation zaten zoom'u keser)
+    const clickable=e.target&&e.target.closest&&e.target.closest('.btn,button,a,input,select,textarea');
+    if(now-lastTap<=350 && !clickable) e.preventDefault();
+    lastTap=now; },{passive:false});
+  // ctrl+wheel / trackpad zoom (masaustu tarayici)
+  document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});
+  // sayfa kaydirma kaynakli zoom sifirlama
+  document.addEventListener('dblclick',stop,{passive:false});
+}
 /* ---- touch controls ---- */
 const tc={left:false,right:false,brake:false,nitro:false,hand:false,camP:false,pauseP:false}; let touchSteer=0;
 { const hold=(id,key)=>{ const el=$(id); const on=e=>{ e.preventDefault(); tc[key]=true; el.classList.add('on'); snd.init(); }; const off=e=>{ e.preventDefault(); tc[key]=false; el.classList.remove('on'); };
