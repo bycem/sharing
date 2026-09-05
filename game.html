@@ -380,6 +380,7 @@ for(const side of [-1,1]){
   g.setIndex(keep); g.computeVertexNormals();
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:grassTex,roughness:1})); m.receiveShadow=true; scene.add(m); window.__grass=m;
 }
+const GROUND_Y=-8; // flat far plane sits well below the lowest banked inner edge (~-3.6) so it can never cut through the road
 // terrain: a regular heightfield (one height per x/z, so it can never cover the road); buried under the road and the ribbon
 {
   let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity; for(const p of track.pts){ minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z); }
@@ -389,13 +390,15 @@ for(const side of [-1,1]){
   const nearestFast=(x,z)=>{ const cx=Math.floor(x/HC),cz=Math.floor(z/HC); let best=-1,bd=Infinity; for(let r=1;r<=3&&best<0;r++){ for(let ax=cx-r;ax<=cx+r;ax++)for(let az=cz-r;az<=cz+r;az++){ const l=hash.get(hk(ax,az)); if(!l) continue; for(const i of l){ const p=track.pts[i]; const dd=(p.x-x)**2+(p.z-z)**2; if(dd<bd){bd=dd;best=i;} } } } return best; };
   const g=stripGeometry(nz,nx,false,(iz,ix)=>{ const x=x0+ix*CELL, z=z0+iz*CELL; const i=nearestFast(x,z); let y;
     if(i<0) y=-0.12; else { const sf=track.surface(x,z,i); const ad=Math.abs(sf.d); if(ad<=ROAD_HALF+CURB_W+2) y=sf.y-0.8; else { const t=track.terrainY(i,sf.d)-0.12; y=t-0.7*(1-smoothstep(ROAD_HALF+CURB_W+2,16,ad)); } }
+    // outer rim dips down to the (deep) ground plane so there is no visible seam
+    const eb=Math.min(ix,iz,nx-1-ix,nz-1-iz); if(eb<8) y=GROUND_Y+(y-GROUND_Y)*(eb/8);
     return {x,y,z,u:x/22,v:z/22}; });
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:grassTex,roughness:1})); m.receiveShadow=true; scene.add(m); window.__terrain=m;
 }
 // ground plane
 {
   const gt=grassTex.clone(); gt.repeat.set(160,160); gt.needsUpdate=true;
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshStandardMaterial({map:gt,roughness:1,color:0xd9e0cc})); m.rotation.x=-Math.PI/2; m.position.y=-0.12; m.receiveShadow=true; scene.add(m);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshStandardMaterial({map:gt,roughness:1,color:0xd9e0cc})); m.rotation.x=-Math.PI/2; m.position.y=GROUND_Y; m.receiveShadow=true; scene.add(m); window.__ground=m;
 }
 // walls (armco)
 for(const side of [-1,1]){
@@ -448,15 +451,21 @@ function setStartLights(n,go){ startLights.forEach((m,k)=>{ if(go){ m.color.set(
 }
 // billboards
 {
-  const ads=[['DEVELOPED BY CEM','#111','#ffd23b'],['FARKIMIZ TARZIMIZ','#ff3b3b','#fff'],['PIVOT TEAM','#3bd4ff','#0a1030'],['APEX RUSH','#ff7a1a','#111'],['DEVELOPED BY CEM','#b14aff','#fff'],['PIVOT TEAM','#2ee59d','#0a2a1a'],['FARKIMIZ TARZIMIZ','#ffd23b','#ff3b3b'],['NITRO','#1a1a1a','#3bd4ff']];
-  const idxs=[180,330,470,720,900,1050,1200,1300];
-  window.__ads=ads;
-  idxs.forEach((i,k)=>{ const side=(k%2)?1:-1; const d=side*(WALL_D+6); const l=lateral(i,d); const y=track.terrainY(i,d);
-    const grp=new THREE.Group(); grp.position.set(l.x,y,l.z); grp.rotation.y=track.heading(i)+(side>0?Math.PI/2:-Math.PI/2);
-    const post=new THREE.Mesh(new THREE.BoxGeometry(0.5,4,0.5),new THREE.MeshStandardMaterial({color:0x333})); post.position.y=2; post.castShadow=true; grp.add(post);
-    const ad=ads[k%ads.length]; const b=new THREE.Mesh(new THREE.BoxGeometry(11,4.4,0.3),[null,null,null,null,new THREE.MeshStandardMaterial({map:billboardTex(ad[0],ad[1],ad[2]),roughness:0.6}),new THREE.MeshStandardMaterial({map:billboardTex(ad[0],ad[1],ad[2]),roughness:0.6})].map(m=>m||new THREE.MeshStandardMaterial({color:0x222}))); b.position.y=6.2; b.castShadow=true; grp.add(b);
-    scene.add(grp);
-  });
+  const ads=[['DEVELOPED BY CEM','#111','#ffd23b'],['FARKIMIZ TARZIMIZ','#ff3b3b','#fff'],['PIVOT TEAM','#3bd4ff','#0a1030'],['AFTER-SALES','#ffffff','#e0202a'],['APEX RUSH','#ff7a1a','#111'],['DEVELOPED BY CEM','#b14aff','#fff'],['PIVOT TEAM','#2ee59d','#0a2a1a'],['AFTER-SALES','#e0202a','#fff'],['FARKIMIZ TARZIMIZ','#ffd23b','#ff3b3b'],['NITRO','#1a1a1a','#3bd4ff']];
+  window.__ads=ads; window.__boards=[];
+  const boardMat=ad=>{ const t=billboardTex(ad[0],ad[1],ad[2]); const f=new THREE.MeshStandardMaterial({map:t,roughness:0.6}); const e=new THREE.MeshStandardMaterial({color:0x222}); return [e,e,e,e,f,f]; };
+  const mkBoard=(x,y,z,rotY,ad,w=11,h=4.4,tall=2)=>{ const grp=new THREE.Group(); grp.position.set(x,y,z); grp.rotation.y=rotY;
+    const post=new THREE.Mesh(new THREE.BoxGeometry(0.5,tall*2,0.5),new THREE.MeshStandardMaterial({color:0x333})); post.position.y=tall; post.castShadow=true; grp.add(post);
+    const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.3),boardMat(ad)); b.position.y=tall*2+h/2; b.castShadow=true; grp.add(b); scene.add(grp); window.__boards.push({grp,ad:ad[0]}); return grp; };
+  // 1) side boards, turned ~35deg toward the oncoming driver instead of edge-on
+  const idxs=[180,330,470,720,900,1050,1200,1300]; let k=0;
+  idxs.forEach((i,n)=>{ const side=(n%2)?1:-1; const d=side*(WALL_D+7); const l=lateral(i,d); const y=track.terrainY(i,d);
+    mkBoard(l.x,y,l.z,track.heading(i)+Math.PI-side*0.6,ads[k++%ads.length]); });
+  // 2) corner boards: on the approach to each corner, straight ahead in the driver's line of sight (beyond the outer wall), facing back at the driver
+  const apex=[]; for(let i=0;i<N;i++){ let mx=true; for(let q=-70;q<=70;q++){ if(track.curv[(i+q+N)%N]>track.curv[i]){ mx=false; break; } } if(mx&&track.curv[i]>0.012) apex.push(i); }
+  for(const a of apex){ const ai=(a-38+N)%N; const p=track.pts[ai],T=track.tans[ai]; let placed=null;
+    for(let L=34;L<=80&&!placed;L+=4){ const x=p.x+T.x*L, z=p.z+T.z*L; const ni=track.nearest(x,z,null); const sf=track.surface(x,z,ni); if(Math.abs(sf.d)>=WALL_D+5){ placed={x,z,y:Math.abs(sf.d)<58?track.terrainY(ni,sf.d):0}; } }
+    if(!placed) continue; mkBoard(placed.x,placed.y,placed.z,track.heading(ai),ads[k++%ads.length],13,5.2,2.6); }
 }
 // trees
 {
@@ -490,10 +499,10 @@ function setStartLights(n,go){ startLights.forEach((m,k)=>{ if(go){ m.color.set(
 ========================================================= */
 const arrows=[]; const archers=[];
 class Archer{
-  constructor(idx,side){
-    this.idx=idx; this.side=side; this.cool=0; this.phase='idle'; this.t=0;
-    const d=side*(WALL_D+4.5); const l=lateral(idx,d); const y=track.terrainY(idx,d);
-    const g=this.g=new THREE.Group(); g.position.set(l.x,y,l.z);
+  constructor(idx,side,scale=1){
+    this.idx=idx; this.side=side; this.scale=scale; this.cool=0; this.phase='idle'; this.t=0;
+    const d=side*(WALL_D+4.5+(scale-1)*2.4); const l=lateral(idx,d); const y=track.terrainY(idx,d);
+    const g=this.g=new THREE.Group(); g.position.set(l.x,y,l.z); g.scale.setScalar(scale);
     // face the track
     g.rotation.y=track.heading(idx)+(side>0?Math.PI/2:-Math.PI/2);
     const skin=new THREE.MeshStandardMaterial({color:0xe0b088,roughness:0.8});
@@ -545,8 +554,8 @@ class Archer{
     const dir=new THREE.Vector3(0,0,1).applyQuaternion(this.g.quaternion); // toward the track
     // aim slightly up-track so the arrow passes above cars
     const T=track.tans[this.idx]; dir.addScaledVector(T,0.25).normalize();
-    const v=dir.multiplyScalar(19); v.y=11.5;
-    spawnArrow(wp,v);
+    const sc=this.scale; const v=dir.multiplyScalar(19*(0.7+0.3*sc)); v.y=11.5*(0.75+0.25*sc);
+    spawnArrow(wp,v,sc);
     const dist=player?wp.distanceTo(player.pos):999; snd.bowTwang(clamp(1-dist/120,0,1));
   }
 }
@@ -558,9 +567,9 @@ function makeArrowMesh(){
   for(let k=0;k<3;k++){ const f=new THREE.Mesh(new THREE.PlaneGeometry(0.035,0.14),fm); f.position.z=-0.38; f.rotation.z=k*Math.PI*2/3; f.position.x=Math.cos(k*Math.PI*2/3)*0.02; f.position.y=Math.sin(k*Math.PI*2/3)*0.02; a.add(f); }
   return a;
 }
-function spawnArrow(pos,vel){
+function spawnArrow(pos,vel,scale=1){
   let ar=arrows.find(a=>!a.m.visible); if(!ar){ ar={m:makeArrowMesh(),v:new THREE.Vector3(),life:0,stuck:false}; scene.add(ar.m); arrows.push(ar); }
-  ar.m.visible=true; ar.m.position.copy(pos); ar.v.copy(vel); ar.life=7; ar.stuck=false;
+  ar.m.scale.setScalar(scale); ar.m.visible=true; ar.m.position.copy(pos); ar.v.copy(vel); ar.life=7; ar.stuck=false;
 }
 const _tmpV=new THREE.Vector3();
 function updateArrows(dt){
@@ -835,8 +844,12 @@ const snd=new Sound();
    INPUT (DualSense / keyboard)
 ========================================================= */
 const keys={};
-addEventListener('keydown',e=>{ keys[e.code]=true; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
-addEventListener('keyup',e=>{ keys[e.code]=false; });
+let shiftHeld=false; const syncMods=e=>{ shiftHeld=!!e.shiftKey; if(!e.shiftKey){ keys.ShiftLeft=keys.ShiftRight=false; } if(!e.altKey){ keys.AltLeft=keys.AltRight=false; } };
+addEventListener('keydown',e=>{ keys[e.code]=true; syncMods(e); if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
+addEventListener('keyup',e=>{ keys[e.code]=false; syncMods(e); });
+addEventListener('mousemove',syncMods); addEventListener('mousedown',syncMods);
+// lost key-ups (Cmd+Tab, Cmd+Shift+R, focus change) would otherwise leave a key stuck down
+const clearKeys=()=>{ for(const k in keys) keys[k]=false; shiftHeld=false; }; addEventListener('blur',clearKeys); document.addEventListener('visibilitychange',()=>{ if(document.hidden) clearKeys(); });
 let padConnected=false;
 addEventListener('gamepadconnected',e=>{ padConnected=true; $('padStatus').textContent='🎮 '+(e.gamepad.id.split('(')[0].trim()||'Kontrolcü')+' BAĞLI'; $('padStatus').classList.add('ok'); });
 addEventListener('gamepaddisconnected',()=>{ padConnected=false; $('padStatus').textContent='🎮 KONTROLCÜ BAĞLANTISI KESİLDİ'; $('padStatus').classList.remove('ok'); });
@@ -854,7 +867,7 @@ function readInput(){
   // keyboard
   if(keys.ArrowLeft||keys.KeyA) inp.steer-=1; if(keys.ArrowRight||keys.KeyD) inp.steer+=1;
   if(keys.ArrowUp||keys.KeyW) inp.throttle=1; if(keys.ArrowDown||keys.KeyS) inp.brake=1;
-  inp.handbrake=!!keys.Space; inp.nitro=!!(keys.ShiftLeft||keys.ShiftRight);
+  inp.handbrake=!!keys.Space; inp.nitro=shiftHeld;
   if(keys.KeyJ) inp.camX=-1; if(keys.KeyL) inp.camX=1; if(keys.KeyI) inp.camY=-1; if(keys.KeyK) inp.camY=1;
   const kp=(code,name)=>{ const k='k_'+code; const now=!!keys[code]; if(now&&!prevBtn[k]) inp[name]=true; prevBtn[k]=now; };
   kp('KeyC','camP'); kp('Escape','pauseP'); kp('Enter','confirmP'); kp('KeyR','backP'); kp('ArrowLeft','leftP'); kp('ArrowRight','rightP'); kp('ArrowUp','upP'); kp('ArrowDown','downP'); kp('KeyM','musicP'); kp('KeyT','stickP'); kp('BracketLeft','dzDownP'); kp('BracketRight','dzUpP');
@@ -1002,7 +1015,7 @@ function buildMapBase(){
   mapBase.img=c;
 }
 buildMapBase();
-archers.push(new Archer(250,-1),new Archer(800,1),new Archer(1120,-1));
+archers.push(new Archer(250,-1),new Archer(800,1,4.5),new Archer(1120,-1)); // the middle one is a giant, taller than the cars
 function drawMap(){
   const g=mapCtx; g.clearRect(0,0,400,400); g.drawImage(mapBase.img,0,0);
   for(const c of cars){ if(c===player) continue; g.fillStyle='#'+c.color.toString(16).padStart(6,'0'); g.beginPath(); g.arc(mapBase.tx(c.pos),mapBase.tz(c.pos),7,0,6.28); g.fill(); g.strokeStyle='rgba(0,0,0,.6)'; g.lineWidth=2; g.stroke(); }
@@ -1146,7 +1159,7 @@ function animate(){
 }
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 $('loading').remove();
-window.__apex={get player(){return player},get cars(){return cars},get state(){return state},get drift(){return drift},track,arrows,archers,THREE,camera,scene};
+window.__apex={get player(){return player},get cars(){return cars},get state(){return state},get drift(){return drift},track,arrows,archers,THREE,camera,scene,setCam:m=>{camMode=m;camSnap=true;},readInput};
 updateCamera(0); camSnap=true;
 animate();
 </script>
