@@ -445,7 +445,7 @@ function updateUI() {
 }
 
 /* ---------------- Oynatma motoru ---------------- */
-let playing = false, speed = 2, clock = 0, lastTs = null, gen = 0;
+let playing = false, speed = 1, clock = 0, lastTs = null, gen = 0;
 function frame(ts) {
   if (lastTs != null && playing) clock += Math.min(ts - lastTs, 100) * speed;
   lastTs = ts; render(); requestAnimationFrame(frame);
