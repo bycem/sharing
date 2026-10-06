@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İstanbul Köprü ve Yolları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ead3; --land:#efe5cc; --ink:#2b2622; --ink2:#5b5148; --red:#c8402f;
+    --card:#fbf6e8; --line:#d8cba8; --accent:#2f8a4e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,.55), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(160,130,80,.12), transparent 45%),
+      repeating-linear-gradient(0deg, rgba(120,100,60,.035) 0 1px, transparent 1px 28px);
+    color:var(--ink); font-family:'Kalam','Comic Sans MS',cursive; min-height:100vh;
+  }
+  header{max-width:1280px;margin:0 auto;padding:18px 16px 6px}
+  h1{font-family:'Caveat',cursive;font-weight:700;font-size:clamp(30px,4.2vw,46px);margin:0;line-height:1;
+     text-decoration:underline wavy rgba(200,64,47,.55);text-underline-offset:8px;text-decoration-thickness:2px}
+  header p{margin:10px 0 0;color:var(--ink2);font-size:15px}
+  main{max-width:1280px;margin:0 auto;padding:10px 16px 28px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+  @media (max-width:900px){main{grid-template-columns:1fr}}
+
+  .mapcard{position:relative;background:var(--land);border:2px solid var(--ink);border-radius:6px 10px 7px 12px;
+     box-shadow:4px 5px 0 rgba(43,38,34,.18);overflow:hidden}
+  .mapcard::after{content:"";position:absolute;inset:6px;border:1px solid rgba(43,38,34,.35);border-radius:4px 8px 5px 9px;pointer-events:none}
+  #map{display:block;width:100%;height:auto;aspect-ratio:793/520;touch-action:manipulation}
+  #map text{font-family:'Caveat',cursive;paint-order:stroke;stroke:var(--land);stroke-linejoin:round}
+  .stamp{position:absolute;left:18px;top:10px;font-family:'Caveat',cursive;font-weight:700;font-size:clamp(40px,7vw,78px);
+     line-height:1;color:var(--red);transform:rotate(-4deg);text-shadow:2px 2px 0 rgba(255,255,255,.6);pointer-events:none}
+  .stamp small{display:block;font-size:.3em;color:var(--ink);transform:rotate(1deg);margin-top:2px;max-width:320px;line-height:1.1}
+  .scalebar{position:absolute;left:20px;bottom:14px;font-size:12px;color:var(--ink);pointer-events:none}
+  .scalebar .bar{height:7px;border:1.5px solid var(--ink);border-top:none;margin-bottom:2px;
+     background:repeating-linear-gradient(90deg,var(--ink) 0 25%,transparent 25% 50%)}
+  .compass{position:absolute;right:14px;top:12px;width:54px;height:54px;pointer-events:none}
+
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+  button{font-family:inherit;font-size:15px;color:var(--ink);background:var(--card);border:1.6px solid var(--ink);
+     border-radius:7px 10px 6px 9px;padding:5px 11px;cursor:pointer;box-shadow:2px 2px 0 rgba(43,38,34,.2)}
+  button:hover{background:#fff}
+  button:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(43,38,34,.2)}
+  button.on{background:var(--ink);color:var(--card)}
+  #play{min-width:96px;font-weight:700}
+  .spacer{flex:1}
+  .speed{display:flex;gap:4px;align-items:center;font-size:14px}
+  .speed button{padding:3px 8px;font-size:14px}
+
+  .timeline{position:relative;height:46px;margin:14px 6px 0}
+  .track{position:absolute;left:0;right:0;top:12px;height:4px;background:var(--line);border-radius:3px}
+  .fill{position:absolute;left:0;top:12px;height:4px;background:var(--red);border-radius:3px;width:0}
+  .dot{position:absolute;top:6px;width:16px;height:16px;margin-left:-8px;border-radius:50%;border:2px solid var(--ink);
+     background:var(--card);cursor:pointer;padding:0;box-shadow:none}
+  .dot.done{background:var(--red)}
+  .dot.cur{transform:scale(1.35);background:#ffe14d}
+  .tick{position:absolute;top:28px;font-size:12px;color:var(--ink2);transform:translateX(-50%)}
+
+  aside{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--card);border:1.6px solid var(--ink);border-radius:9px 6px 11px 7px;padding:14px 16px;box-shadow:3px 3px 0 rgba(43,38,34,.15)}
+  .ev .yr{font-family:'Caveat',cursive;font-weight:700;font-size:44px;color:var(--red);line-height:.9}
+  .ev h2{font-family:'Caveat',cursive;font-size:28px;margin:4px 0 6px;line-height:1.05}
+  .ev p{margin:6px 0 0;font-size:15px;line-height:1.45}
+  .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:12px;border:1.3px solid var(--ink);border-radius:10px;padding:0 8px;background:#fff}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+  .stats b{display:block;font-family:'Caveat',cursive;font-size:36px;line-height:1;color:var(--ink)}
+  .stats span{font-size:12px;color:var(--ink2);line-height:1.15;display:block}
+  .legend h3,.list h3{font-family:'Caveat',cursive;font-size:22px;margin:0 0 6px}
+  .legend div{display:flex;align-items:center;gap:10px;font-size:14px;margin:3px 0}
+  .legend svg{flex:none}
+  .list ol{list-style:none;margin:0;padding:0;max-height:240px;overflow:auto}
+  .list li{padding:3px 4px;border-radius:5px;cursor:pointer;font-size:14px;display:flex;gap:8px}
+  .list li b{font-family:'Caveat',cursive;font-size:18px;min-width:56px;color:var(--ink2)}
+  .list li.done b{color:var(--red)}
+  .list li.cur{background:#ffe98a}
+  .list li:hover{background:rgba(0,0,0,.05)}
+  footer{max-width:1280px;margin:0 auto;padding:0 16px 24px;font-size:13px;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>İstanbul'un Köprüleri ve Yolları · 1923 → Bugün</h1>
+  <p>Cumhuriyet'ten günümüze Boğaz ve Haliç köprüleri, D100 (E-5), TEM ve Kuzey Marmara Otoyolu'nun adım adım gelişimi — el çizimi kroki.</p>
+</header>
+
+<main>
+  <section>
+    <div class="mapcard">
+      <svg id="map" viewBox="0 0 793 520" preserveAspectRatio="xMidYMid meet" aria-label="İstanbul kroki haritası">
+        <defs>
+          <pattern id="hatch" patternUnits="userSpaceOnUse" width="7" height="7">
+            <line x1="0" y1="0" x2="0" y2="7" stroke="#6f97a3" stroke-width="0.7" opacity=".55"/>
+          </pattern>
+        </defs>
+        <rect x="-200" y="-200" width="1200" height="1000" fill="var(--land)"/>
+        <g id="base"></g>
+        <g id="roads"></g>
+        <g id="labels"></g>
+      </svg>
+      <div class="stamp" id="stamp">1923<small id="stampT"></small></div>
+      <svg class="compass" viewBox="-30 -30 60 60">
+        <circle r="22" fill="none" stroke="#2b2622" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <path d="M0,-26 L6,0 L0,6 L-6,0Z" fill="#c8402f" stroke="#2b2622" stroke-width="1.2"/>
+        <path d="M0,26 L6,0 L0,-6 L-6,0Z" fill="#fbf6e8" stroke="#2b2622" stroke-width="1.2"/>
+        <text y="-15" x="9" font-family="Caveat" font-size="14" font-weight="700" fill="#2b2622">K</text>
+      </svg>
+      <div class="scalebar"><div class="bar" id="sbar"></div><span id="stext"></span></div>
+    </div>
+
+    <div class="controls">
+      <button id="first" title="Başa dön">⏮</button>
+      <button id="prev" title="Önceki adım">◀</button>
+      <button id="play" class="on">❚❚ Durdur</button>
+      <button id="next" title="Sonraki adım">▶</button>
+      <button id="last" title="Bugüne atla">⏭</button>
+      <span class="spacer"></span>
+      <span class="speed">Hız:
+        <button data-s="0.5">0.5×</button><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="4">4×</button>
+      </span>
+    </div>
+    <div class="timeline" id="timeline"><div class="track"></div><div class="fill" id="tfill"></div></div>
+  </section>
+
+  <aside>
+    <div class="card ev">
+      <div class="yr" id="pYear">1923</div>
+      <h2 id="pTitle"></h2>
+      <div class="tags" id="pTags"></div>
+      <p id="pDesc"></p>
+    </div>
+    <div class="card stats">
+      <div><b id="sBK">0</b><span>Boğaz<br>köprüsü</span></div>
+      <div><b id="sBT">0</b><span>Boğaz<br>tüneli</span></div>
+      <div><b id="sHK">0</b><span>Haliç<br>köprüsü</span></div>
+    </div>
+    <div class="card legend">
+      <h3>Lejant</h3>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#173a24" stroke-width="6"/><line x1="2" y1="6" x2="42" y2="6" stroke="#2f8a4e" stroke-width="4"/><line x1="2" y1="6" x2="42" y2="6" stroke="#f6efdc" stroke-width=".8" stroke-dasharray="5 4"/></svg>Otoyol (O-1, O-2, O-3, O-4, O-7)</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#1e2f55" stroke-width="5"/><line x1="2" y1="6" x2="42" y2="6" stroke="#3f6fc2" stroke-width="3"/></svg>Devlet yolu (D100 / E-5)</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#2b2622" stroke-width="3.4"/><line x1="2" y1="6" x2="42" y2="6" stroke="#f6efdc" stroke-width="1.4"/></svg>Ana cadde / bulvar</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#2b1d1d" stroke-width="8"/><line x1="2" y1="6" x2="42" y2="6" stroke="#d2402f" stroke-width="5"/></svg>Köprü</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#6b3fa0" stroke-width="3.5" stroke-dasharray="7 5"/></svg>Tünel (deniz altı)</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#8a6d4b" stroke-width="1.6" stroke-dasharray="4 3"/></svg>Tarihî yol</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#3d7ea6" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/></svg>Vapur hattı</div>
+      <div><svg width="44" height="12"><line x1="2" y1="6" x2="42" y2="6" stroke="#ffe14d" stroke-width="12" opacity=".7"/></svg>O yıl eklenen</div>
+    </div>
+    <div class="card list">
+      <h3>Adımlar</h3>
+      <ol id="list" style="position:relative"></ol>
+    </div>
+  </aside>
+</main>
+<footer>Kroki niteliğindedir: konumlar elle sadeleştirilmiştir, bazı tarihler dönem bazlı/yaklaşıktır. Klavye: <b>boşluk</b> oynat/durdur, <b>← →</b> adım.</footer>
+
+<script>
+(() => {
+const W = 793, H = 520, NS = 'http://www.w3.org/2000/svg';
+const pr = ([lon, lat]) => [(lon - 28.40) * 755, (41.30 - lat) * 1000];
+let seed = 11;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const el = (tag, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const f2 = n => n.toFixed(2);
+function smooth(pts, closed) {
+  if (pts.length < 2) return '';
+  let d = `M${f2(pts[0][0])},${f2(pts[0][1])}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    d += `C${f2(p1[0] + (p2[0] - p0[0]) / 6)},${f2(p1[1] + (p2[1] - p0[1]) / 6)} ${f2(p2[0] - (p3[0] - p1[0]) / 6)},${f2(p2[1] - (p3[1] - p1[1]) / 6)} ${f2(p2[0])},${f2(p2[1])}`;
+  }
+  return closed ? d + 'Z' : d;
+}
+function partial(pts, segs, total, t) {
+  if (t >= 1) return pts;
+  if (t <= 0) return [];
+  let rest = total * t; const out = [pts[0]];
+  for (let i = 0; i < segs.length; i++) {
+    if (rest > segs[i]) { out.push(pts[i + 1]); rest -= segs[i]; }
+    else { const f = rest / segs[i]; out.push([pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f]); break; }
+  }
+  return out;
+}
+
+/* ---------------- Coğrafya (kaba kroki) ---------------- */
+const WATER = [[28.30,41.06],[28.38,41.06],[28.45,41.05],[28.52,41.04],[28.57,41.02],[28.60,41.01],[28.66,40.995],[28.71,40.975],[28.75,40.975],[28.77,40.978],[28.79,40.968],[28.82,40.955],[28.85,40.965],[28.875,40.975],[28.90,40.985],[28.92,40.993],[28.95,41.000],[28.965,41.003],[28.98,41.005],[28.988,41.014],[28.977,41.018],[28.972,41.017],[28.960,41.023],[28.948,41.032],[28.945,41.038],[28.940,41.044],[28.935,41.050],[28.940,41.058],[28.945,41.054],[28.948,41.047],[28.955,41.040],[28.963,41.032],[28.967,41.028],[28.976,41.023],[28.983,41.027],[28.992,41.034],[28.998,41.039],[29.006,41.042],[29.018,41.044],[29.027,41.047],[29.036,41.059],[29.044,41.068],[29.043,41.077],[29.056,41.085],[29.055,41.097],[29.057,41.105],[29.055,41.113],[29.065,41.114],[29.073,41.121],[29.060,41.137],[29.053,41.150],[29.048,41.163],[29.058,41.170],[29.075,41.183],[29.105,41.212],[29.110,41.232],[29.08,41.245],[29.02,41.250],[28.95,41.265],[28.88,41.28],[28.80,41.295],[28.72,41.31],[28.60,41.33],[28.38,41.40],[28.30,41.45],[29.55,41.45],[29.55,41.18],[29.40,41.19],[29.28,41.21],[29.22,41.225],[29.17,41.225],[29.150,41.218],[29.130,41.205],[29.110,41.195],[29.090,41.177],[29.085,41.160],[29.097,41.135],[29.090,41.118],[29.085,41.108],[29.067,41.100],[29.066,41.083],[29.060,41.075],[29.057,41.066],[29.050,41.052],[29.043,41.045],[29.030,41.035],[29.015,41.027],[29.006,41.020],[29.010,41.006],[29.018,40.998],[29.022,40.990],[29.024,40.980],[29.036,40.966],[29.065,40.960],[29.080,40.955],[29.095,40.950],[29.110,40.940],[29.130,40.928],[29.180,40.895],[29.235,40.872],[29.265,40.860],[29.295,40.820],[29.33,40.810],[29.38,40.790],[29.45,40.770],[29.55,40.76],[29.55,40.70],[28.30,40.70]];
+const ISLANDS = [
+  [[29.043,40.912],[29.052,40.918],[29.058,40.910],[29.050,40.903]],
+  [[29.062,40.884],[29.072,40.888],[29.080,40.880],[29.070,40.874]],
+  [[29.085,40.882],[29.098,40.886],[29.106,40.877],[29.094,40.870],[29.086,40.874]],
+  [[29.108,40.872],[29.122,40.874],[29.135,40.860],[29.130,40.846],[29.115,40.850],[29.110,40.862]]
+];
+const LAKES = [
+  [[28.768,40.982],[28.785,40.995],[28.785,41.02],[28.775,41.04],[28.755,41.045],[28.745,41.03],[28.752,41.005],[28.762,40.99]],
+  [[28.585,41.022],[28.60,41.04],[28.595,41.07],[28.575,41.088],[28.555,41.075],[28.56,41.045],[28.575,41.03]]
+];
+const PLACES = [
+  ['KARADENİZ',29.32,41.272,20,0,'sea'],['MARMARA DENİZİ',28.66,40.87,20,0,'sea'],
+  ['B o ğ a z i ç i',29.075,41.148,11,-68,'water'],['Haliç',28.952,41.038,8,-38,'water'],
+  ['AVRUPA YAKASI',28.66,41.16,15,0,'side'],['ANADOLU YAKASI',29.30,41.03,15,0,'side'],
+  ['Fatih',28.94,41.012,10],['Beyoğlu',28.977,41.038,10],['Beşiktaş',29.002,41.052,10],['Üsküdar',29.03,41.022,10],
+  ['Kadıköy',29.045,40.99,10],['Bakırköy',28.872,40.986,10],['Sarıyer',29.03,41.172,10],['Beykoz',29.12,41.13,10],
+  ['Kartal',29.19,40.918,10],['Pendik',29.25,40.898,10],['Tuzla',29.30,40.855,10],['Gebze',29.43,40.818,10],
+  ['Büyükçekmece',28.53,41.06,10],['Avcılar',28.72,40.997,10],['Kağıthane',28.97,41.073,10],['Ümraniye',29.145,41.025,10],
+  ['Adalar',29.16,40.862,10],['← Edirne',28.44,41.088,10],['İzmit →',29.42,40.905,10],['Şile →',29.42,41.12,10],
+];
+
+const base = document.getElementById('base');
+el('path', {d: smooth(WATER.map(pr), true), fill: '#d6e4e3'}, base);
+el('path', {d: smooth(WATER.map(pr), true), fill: 'url(#hatch)'}, base);
+el('path', {d: smooth(WATER.map(pr), true), fill: 'none', stroke: '#2b2622', 'stroke-width': 1.5, 'vector-effect': 'non-scaling-stroke', 'stroke-linejoin': 'round'}, base);
+el('path', {d: smooth(WATER.map(pr).map(([x, y]) => [x + rnd() * 1.6 - .8, y + rnd() * 1.6 - .8]), true), fill: 'none', stroke: '#2b2622', 'stroke-width': .7, opacity: .45, 'vector-effect': 'non-scaling-stroke'}, base);
+for (const isl of ISLANDS) el('path', {d: smooth([...isl, isl[0]].map(pr), true), fill: 'var(--land)', stroke: '#2b2622', 'stroke-width': 1.2, 'vector-effect': 'non-scaling-stroke'}, base);
+for (const lk of LAKES) {
+  el('path', {d: smooth([...lk, lk[0]].map(pr), true), fill: '#d6e4e3', stroke: '#2b2622', 'stroke-width': 1.2, 'vector-effect': 'non-scaling-stroke'}, base);
+  el('path', {d: smooth([...lk, lk[0]].map(pr), true), fill: 'url(#hatch)'}, base);
+}
+
+/* ---------------- Olaylar ---------------- */
+const EVENTS = [
+ {year:1923, title:"Cumhuriyet'in İstanbul'u", tags:['Başlangıç'], full:true,
+  desc:"Şehir tarihî yarımada, Galata ve Üsküdar–Kadıköy çevresinde toplanıyor. Haliç'te iki duba köprü var: Galata (1912) ve eski Unkapanı köprüsü. Boğaz'da köprü yok; iki yaka arası geçiş yalnızca vapurla. Edirne'ye ve Gebze'ye giden tarihî yollar dar ve tozlu.",
+  items:[
+   {id:'galata1912',kind:'bridge',count:'halic',name:'Galata (1912)',pts:[[28.9724,41.0174],[28.9750,41.0240]]},
+   {id:'unkOld',kind:'bridgeOld',count:'halic',name:'Eski Unkapanı',pts:[[28.9600,41.0232],[28.9656,41.0300]],nameAt:[28.952,41.026]},
+   {kind:'old',name:'Edirne Yolu',nameAt:[28.67,41.022],pts:[[28.925,41.018],[28.88,41.008],[28.82,41.000],[28.775,40.993],[28.72,40.99],[28.66,41.005],[28.585,41.022],[28.50,41.045],[28.40,41.065]]},
+   {kind:'old',name:'Bağdat Yolu',nameAt:[29.16,40.935],pts:[[29.016,41.025],[29.025,41.005],[29.03,40.99],[29.05,40.977],[29.08,40.968],[29.10,40.958],[29.135,40.938],[29.185,40.905],[29.24,40.882],[29.30,40.840],[29.37,40.815],[29.45,40.80]]},
+   {kind:'ferry',name:'Vapur',nameAt:[29.005,40.998],pts:[[28.978,41.0225],[29.0,41.005],[29.021,40.992]]},
+   {kind:'ferry',pts:[[28.979,41.018],[29.0,41.021],[29.013,41.0255]]},
+  ]},
+ {year:1940, title:'Atatürk (Unkapanı) Köprüsü', tags:['Köprü','Haliç'], removes:['unkOld'],
+  desc:"Ahşap/duba eski Unkapanı köprüsünün yerine, 'Gazi Köprüsü' olarak da anılan Atatürk Köprüsü 1940'ta açıldı. Haliç'in iki yakası arasında daha sağlam bir bağlantı.",
+  items:[{kind:'bridge',count:'halic',name:'Atatürk K.',nameAt:[28.951,41.027],pts:[[28.9600,41.0232],[28.9656,41.0300]]}]},
+ {year:1953, title:'Yeşilköy Havalimanı terminali', tags:['Havalimanı'],
+  desc:"Yeşilköy'deki havaalanına yeni terminal binası açıldı. Şehir artık Marmara kıyısı boyunca batıya, havaalanına doğru büyüyor.",
+  items:[{kind:'marker',icon:'✈',name:'Yeşilköy Havalimanı',pts:[[28.815,40.981]]}]},
+ {year:1956, title:'Menderes dönemi bulvarları', tags:['Cadde','İmar'],
+  desc:"1956–58 arasında tarihî yarımadada geniş bulvarlar açıldı: Vatan ve Millet caddeleri Aksaray'ı surlara bağladı, Beşiktaş'ta Barbaros Bulvarı yapıldı. Şehir artık otomobile göre şekilleniyor.",
+  items:[
+   {kind:'street',name:'Vatan Cd.',nameAt:[28.936,41.026],pts:[[28.953,41.0135],[28.94,41.018],[28.928,41.024]]},
+   {kind:'street',name:'Millet Cd.',nameAt:[28.935,41.008],pts:[[28.951,41.0105],[28.935,41.013],[28.921,41.0155]]},
+   {kind:'street',name:'Barbaros Blv.',nameAt:[28.995,41.060],pts:[[29.006,41.044],[29.008,41.055],[29.012,41.067]]},
+  ]},
+ {year:1957, title:'Londra Asfaltı — D100 Avrupa', tags:['D100','E-5'],
+  desc:"Topkapı'dan Edirne'ye uzanan yeni asfalt yol, bugünkü D100'ün (E-5) Avrupa yakası omurgası oldu. Merter, Sefaköy, Avcılar boyunca sanayi ve yeni mahalleler bu yolun çevresinde büyüyecek.",
+  items:[{kind:'droad',shield:'D100',shieldAt:[28.69,40.995],name:'Londra Asfaltı',nameAt:[28.84,41.012],pts:[[28.921,41.0165],[28.90,41.011],[28.88,41.006],[28.85,41.001],[28.82,40.998],[28.79,40.996],[28.773,40.994],[28.74,40.99],[28.71,40.992],[28.66,41.006],[28.62,41.017],[28.585,41.024],[28.54,41.035],[28.47,41.052],[28.40,41.065]]}]},
+ {year:1958, title:'Kennedy Caddesi (Sahil Yolu)', tags:['Cadde','Sahil'],
+  desc:"Sarayburnu'ndan Yeşilköy'e uzanan sahil yolu, Marmara kıyısı doldurularak açıldı. Adını 1963'te alacak; bugün de Avrasya Tüneli ve havalimanı yönünün ana bağlantısı.",
+  items:[{kind:'avenue',name:'Kennedy Cd.',nameAt:[28.90,40.978],pts:[[28.986,41.0145],[28.981,41.0065],[28.97,41.004],[28.95,41.0025],[28.93,40.9985],[28.91,40.992],[28.89,40.983],[28.87,40.978],[28.85,40.970],[28.835,40.963],[28.815,40.962],[28.795,40.972]]}]},
+ {year:1959, title:'Ankara Asfaltı — D100 Anadolu', tags:['D100','Vapur'],
+  desc:"Harem'den Kartal, Pendik ve Gebze'ye uzanan Ankara Asfaltı, D100'ün Asya ayağı. İki yaka arasında araçlar hâlâ arabalı vapurlarla geçiyor; bayramlarda iskelelerde saatlerce kuyruk.",
+  items:[
+   {kind:'droad',shield:'D100',shieldAt:[29.215,40.905],name:'Ankara Asfaltı',nameAt:[29.10,40.985],pts:[[29.013,41.008],[29.03,41.005],[29.045,40.999],[29.07,40.986],[29.095,40.973],[29.115,40.952],[29.14,40.937],[29.17,40.918],[29.19,40.906],[29.245,40.886],[29.28,40.862],[29.31,40.842],[29.36,40.82],[29.45,40.805]]},
+   {kind:'ferry',name:'Arabalı vapur',nameAt:[29.0,41.040],pts:[[28.994,41.034],[29.004,41.032],[29.014,41.028]]},
+   {kind:'ferry',pts:[[28.982,41.016],[28.997,41.012],[29.010,41.007]]},
+  ]},
+ {year:1973, title:'Boğaziçi Köprüsü ve O-1', tags:['Köprü','Boğaz','O-1'],
+  desc:"29 Ekim 1973'te, Cumhuriyet'in 50. yılında açıldı: 1074 m orta açıklıkla dönemin dünyadaki en uzun asma köprülerinden. O-1 çevre yolu Zincirlikuyu–Altunizade bağlantısıyla Avrupa'dan Asya'ya ilk kez karayoluyla geçiliyor. (2016'dan beri adı 15 Temmuz Şehitler Köprüsü.)",
+  items:[
+   {kind:'bridge',count:'bogazK',name:'Boğaziçi Köprüsü',nameAt:[29.05,41.056],pts:[[29.022,41.0505],[29.046,41.0435]]},
+   {kind:'moto',pts:[[29.012,41.068],[29.018,41.062],[29.021,41.055],[29.022,41.0505]]},
+   {kind:'moto',shield:'O-1',shieldAt:[29.058,41.022],pts:[[29.046,41.0435],[29.047,41.035],[29.045,41.025],[29.048,41.012],[29.056,41.0],[29.07,40.987]]},
+  ]},
+ {year:1974, title:'Haliç Köprüsü ve O-1 Avrupa', tags:['Köprü','Haliç','O-1'],
+  desc:"Ayvansaray–Halıcıoğlu arasında Haliç'i geçen otoyol köprüsü açıldı. O-1'in Topkapı–Okmeydanı–Mecidiyeköy hattıyla Londra Asfaltı doğrudan Boğaziçi Köprüsü'ne bağlandı: D100 artık şehrin içinden kesintisiz akıyor.",
+  items:[
+   {kind:'bridge',count:'halic',name:'Haliç Köprüsü',nameAt:[28.928,41.050],pts:[[28.9365,41.0425],[28.9515,41.0485]]},
+   {kind:'moto',pts:[[28.921,41.0165],[28.926,41.025],[28.931,41.034],[28.9365,41.0425]]},
+   {kind:'moto',shield:'O-1',shieldAt:[28.975,41.066],pts:[[28.9515,41.0485],[28.96,41.054],[28.97,41.059],[28.985,41.065],[28.998,41.068],[29.012,41.068]]},
+  ]},
+ {year:1985, label:"1980'ler", title:'Anadolu yakası sahil yolu', tags:['Sahil','Dolgu'],
+  desc:"1980'lerde Kadıköy–Bostancı arasında deniz doldurularak sahil yolu ve parklar açıldı. Bağdat Caddesi'nin yükü hafifliyor.",
+  items:[{kind:'avenue',name:'Sahil yolu',nameAt:[29.07,40.952],pts:[[29.024,40.986],[29.03,40.975],[29.04,40.968],[29.065,40.9615],[29.08,40.957],[29.095,40.952]]}]},
+ {year:1988, title:'Fatih Sultan Mehmet Köprüsü ve TEM', tags:['Köprü','Boğaz','O-2','O-4'],
+  desc:"3 Temmuz 1988'de açılan FSM Köprüsü (1090 m orta açıklık) ile TEM otoyolu: Avrupa'da O-2 (Mahmutbey–Hisarüstü), Asya'da O-4 Anadolu Otoyolu (Kavacık–Gebze). Transit trafik şehir merkezinin kuzeyine kaydı.",
+  items:[
+   {kind:'bridge',count:'bogazK',name:'FSM Köprüsü',nameAt:[29.03,41.103],pts:[[29.048,41.0885],[29.074,41.093]]},
+   {kind:'moto',shield:'O-2',shieldAt:[28.90,41.086],pts:[[28.83,41.06],[28.87,41.072],[28.91,41.08],[28.95,41.087],[28.99,41.094],[29.015,41.094],[29.035,41.089],[29.048,41.0885]]},
+   {kind:'moto',shield:'O-4',shieldAt:[29.25,40.950],pts:[[29.074,41.093],[29.09,41.088],[29.105,41.07],[29.115,41.05],[29.12,41.03],[29.135,41.0],[29.16,40.975],[29.20,40.958],[29.25,40.94],[29.29,40.92],[29.33,40.89],[29.37,40.86],[29.41,40.835],[29.45,40.82]]},
+  ]},
+ {year:1993, label:"1990'lar", title:'Edirne Otoyolu ve Basın Ekspres', tags:['O-3'],
+  desc:"1990'larda O-3 Edirne Otoyolu Mahmutbey'den batıya uzandı; Basın Ekspres Yolu, Atatürk Havalimanı/D100 ile TEM'i birbirine bağladı. İkitelli ve Bağcılar çevresinde yeni sanayi ve konut bölgeleri doğuyor.",
+  items:[
+   {kind:'moto',shield:'O-3',shieldAt:[28.66,41.090],pts:[[28.83,41.06],[28.78,41.063],[28.72,41.068],[28.66,41.078],[28.62,41.09],[28.575,41.103],[28.52,41.11],[28.40,41.115]]},
+   {kind:'avenue',name:'Basın Ekspres',nameAt:[28.85,41.035],pts:[[28.815,40.99],[28.818,41.02],[28.822,41.045],[28.83,41.06]]},
+  ]},
+ {year:1994, title:'Yeni Galata Köprüsü', tags:['Köprü','Haliç'], removes:['galata1912'],
+  desc:"1992'deki yangında ağır hasar gören 1912 tarihli tarihî köprünün yerine bugünkü açılır-kapanır Galata Köprüsü 1994'te hizmete girdi. Eski köprünün parçaları Haliç'in yukarısına taşındı.",
+  items:[{kind:'bridge',count:'halic',name:'Galata Köprüsü',nameAt:[28.986,41.020],pts:[[28.9732,41.0168],[28.9758,41.0238]]}]},
+ {year:2013, title:'Marmaray', tags:['Tünel','Boğaz','Raylı'],
+  desc:"29 Ekim 2013: Boğaz'ın altından geçen ilk raylı tüp tünel, Kazlıçeşme–Ayrılık Çeşmesi arası. 2019'da Halkalı–Gebze banliyö hattıyla tamamlandı.",
+  items:[{kind:'tunnel',count:'bogazT',name:'Marmaray',nameAt:[28.995,41.029],pts:[[28.92,40.995],[28.95,41.004],[28.977,41.016],[29.0,41.022],[29.016,41.024],[29.03,41.01],[29.036,41.0]]}]},
+ {year:2014, title:'Haliç Metro Köprüsü', tags:['Köprü','Haliç','Metro'],
+  desc:"M2 metro hattını Şişhane'den Yenikapı'ya bağlayan Haliç Metro Köprüsü, Galata ile Atatürk köprüleri arasında açıldı.",
+  items:[{kind:'bridge',count:'halic',name:'Metro K.',nameAt:[28.963,41.016],pts:[[28.9665,41.019],[28.9705,41.027]]}]},
+ {year:2016, title:'Yavuz Sultan Selim Köprüsü ve Kuzey Marmara', tags:['Köprü','Boğaz','O-7'],
+  desc:"26 Ağustos 2016: Boğaz'ın Karadeniz ağzındaki üçüncü köprü. 1408 m orta açıklık, 59 m genişlik ve raylı sistem için ayrılmış şeritler. Kuzey Marmara Otoyolu'nun ilk kesimi (Odayeri–Paşaköy) ile birlikte açıldı.",
+  items:[
+   {kind:'bridge',count:'bogazK',name:'Yavuz Sultan Selim K.',nameAt:[29.12,41.228],pts:[[29.099,41.2085],[29.137,41.2005]]},
+   {kind:'moto',shield:'O-7',shieldAt:[28.98,41.222],pts:[[28.88,41.20],[28.93,41.21],[28.98,41.215],[29.03,41.215],[29.07,41.21],[29.099,41.2085]]},
+   {kind:'moto',shield:'O-7',shieldAt:[29.225,41.150],pts:[[29.137,41.2005],[29.16,41.185],[29.19,41.165],[29.22,41.14],[29.25,41.115],[29.28,41.09],[29.30,41.075]]},
+  ]},
+ {year:2016, label:'2016', title:'Avrasya Tüneli', tags:['Tünel','Boğaz'],
+  desc:"20 Aralık 2016: Kazlıçeşme–Göztepe arasında Boğaz'ın altından geçen iki katlı karayolu tüneli. Kennedy Caddesi genişletildi; tünel yalnızca otomobil ve minibüslere açık.",
+  items:[
+   {kind:'tunnel',count:'bogazT',name:'Avrasya Tüneli',nameAt:[28.99,40.993],pts:[[28.965,41.0035],[28.99,41.001],[29.019,40.996]]},
+   {kind:'avenue',pts:[[29.019,40.996],[29.035,40.993],[29.05,40.99],[29.065,40.987]]},
+  ]},
+ {year:2018, title:'İstanbul Havalimanı', tags:['Havalimanı'],
+  desc:"29 Ekim 2018'de Karadeniz kıyısında açılan yeni havalimanı, Kuzey Marmara Otoyolu ile bağlanıyor. Atatürk (Yeşilköy) Havalimanı 2019'da tarifeli yolcu uçuşlarına kapandı.",
+  items:[{kind:'marker',icon:'✈',name:'İstanbul Havalimanı',pts:[[28.745,41.262]]}]},
+ {year:2020, title:'Kuzey Marmara — Asya kesimi', tags:['O-7'],
+  desc:"Paşaköy'den Kurtköy üzerinden doğuya, Akyazı yönüne uzanan kesimle otoyol İzmit Körfezi'ndeki Osmangazi Köprüsü bağlantısına kavuştu.",
+  items:[{kind:'moto',shield:'O-7',shieldAt:[29.345,40.99],pts:[[29.30,41.075],[29.32,41.03],[29.33,40.98],[29.33,40.94],[29.37,40.91],[29.41,40.895],[29.45,40.89]]}]},
+ {year:2021, title:'Kuzey Marmara — Avrupa kesimi', tags:['O-7'],
+  desc:"Kınalı–Odayeri kesimiyle Kuzey Marmara Otoyolu Edirne yönüne bağlandı. Transit trafik artık şehri tamamen kuzeyden, üçüncü bir halka ile atlayabiliyor.",
+  items:[{kind:'moto',shield:'O-7',shieldAt:[28.62,41.175],pts:[[28.88,41.20],[28.82,41.21],[28.76,41.215],[28.70,41.20],[28.64,41.175],[28.58,41.155],[28.50,41.145],[28.40,41.14]]}]},
+ {year:2026, label:'Bugün', title:'Bugünkü İstanbul ağı', tags:['Özet'], full:true,
+  desc:"Boğaz'da üç asma köprü ve iki tüp geçit (Marmaray, Avrasya), Haliç'te dört köprü. Üç halka hâlinde otoyol: O-1 (iç), O-2/O-4 TEM (orta) ve O-7 Kuzey Marmara (dış). D100 (E-5) ise hâlâ şehrin en yoğun ana arteri.",
+  items:[]},
+];
+
+/* ---------------- Stiller ---------------- */
+const STY = {
+  old:      [{c:'#8a6d4b', w:1.6, dash:'4 3'}],
+  ferry:    [{c:'#3d7ea6', w:2, dash:'1 4', cap:'round'}],
+  street:   [{c:'#2b2622', w:3.2}, {c:'#f6efdc', w:1.3}],
+  avenue:   [{c:'#2b2622', w:4.2}, {c:'#f6efdc', w:2}],
+  droad:    [{c:'#1e2f55', w:5}, {c:'#3f6fc2', w:3}],
+  moto:     [{c:'#173a24', w:6}, {c:'#2f8a4e', w:4}, {c:'#f6efdc', w:.8, dash:'5 4'}],
+  bridge:   [{c:'#2b1d1d', w:8, cap:'butt'}, {c:'#d2402f', w:5, cap:'butt'}],
+  bridgeOld:[{c:'#2b1d1d', w:6, cap:'butt'}, {c:'#a99b86', w:3.5, cap:'butt'}],
+  tunnel:   [{c:'#f6efdc', w:5, op:.6}, {c:'#6b3fa0', w:3.5, dash:'7 5'}],
+};
+const SHIELD = {moto:'#2f8a4e', droad:'#2a5aa8'};
+const PENCIL = new Set(['street','avenue','droad','moto','bridge','bridgeOld']);
+
+const gRoads = document.getElementById('roads'), gLabels = document.getElementById('labels');
+const layerOrder = ['old','ferry','street','avenue','droad','tunnel','moto','bridgeOld','bridge','marker'];
+const zLayers = {};
+for (const k of layerOrder) zLayers[k] = el('g', {}, gRoads);
+const hlLayer = el('g', {}, gRoads); gRoads.insertBefore(hlLayer, gRoads.firstChild);
+
+const ITEMS = [], byId = {};
+EVENTS.forEach((ev, ei) => {
+  ev.items.forEach(it => {
+    it.ev = ei; it.p = it.pts.map(pr);
+    it.segs = []; it.len = 0;
+    for (let i = 0; i < it.p.length - 1; i++) { const l = Math.hypot(it.p[i + 1][0] - it.p[i][0], it.p[i + 1][1] - it.p[i][1]); it.segs.push(l); it.len += l; }
+    it.jit = it.p.map(() => [rnd() * 2 - 1, rnd() * 2 - 1]);
+    it.prog = 0; it.fresh = false; it.gone = 0;
+    if (it.kind === 'marker') {
+      const [x, y] = it.p[0];
+      it.g = el('g', {}, zLayers.marker);
+      it.mark = el('g', {}, it.g);
+      el('circle', {r: 9, fill: '#fbf6e8', stroke: '#2b2622', 'stroke-width': 1.6}, it.mark);
+      const t = el('text', {'text-anchor': 'middle', y: 4.5, 'font-size': 12, fill: '#2b2622', style: 'stroke:none;font-family:sans-serif'}, it.mark);
+      t.textContent = it.icon;
+      it.hl = el('circle', {r: 16, fill: '#ffe14d', opacity: 0}, hlLayer);
+      it.x = x; it.y = y;
+    } else {
+      it.g = el('g', {fill: 'none', 'stroke-linejoin': 'round'}, zLayers[it.kind]);
+      it.hl = el('path', {fill: 'none', stroke: '#ffe14d', 'stroke-width': 16, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0, 'vector-effect': 'non-scaling-stroke'}, hlLayer);
+      it.paths = STY[it.kind].map(s => el('path', {stroke: s.c, 'stroke-width': s.w, 'stroke-linecap': s.cap || 'round', 'stroke-dasharray': s.dash || 'none', opacity: s.op || 1, 'vector-effect': 'non-scaling-stroke'}, it.g));
+      if (PENCIL.has(it.kind)) it.pencil = el('path', {stroke: '#2b2622', 'stroke-width': .8, opacity: .5, 'vector-effect': 'non-scaling-stroke'}, it.g);
+    }
+    // etiketler
+    if (it.name) {
+      const at = it.nameAt ? pr(it.nameAt) : (it.kind === 'marker' ? [it.p[0][0], it.p[0][1] - 15] : it.p[Math.floor(it.p.length / 2)]);
+      it.lab = el('g', {}, gLabels); it.labAt = at;
+      const t = el('text', {'text-anchor': 'middle', 'font-size': it.kind.startsWith('bridge') ? 13 : 11.5, 'font-weight': 700,
+        fill: it.kind.startsWith('bridge') ? '#b23324' : it.kind === 'tunnel' ? '#6b3fa0' : '#2b2622', 'stroke-width': 3.2}, it.lab);
+      t.textContent = it.name;
+    }
+    if (it.shield) {
+      const at = pr(it.shieldAt);
+      it.sh = el('g', {}, gLabels); it.shAt = at;
+      const w = 8 + it.shield.length * 6.4;
+      el('rect', {x: -w / 2 - 1.5, y: -8.5, width: w + 3, height: 17, rx: 4, fill: '#2b2622'}, it.sh);
+      el('rect', {x: -w / 2, y: -7, width: w, height: 14, rx: 3, fill: SHIELD[it.kind], stroke: '#fff', 'stroke-width': 1}, it.sh);
+      const t = el('text', {'text-anchor': 'middle', y: 4, 'font-size': 10.5, fill: '#fff', style: 'stroke:none;font-family:Arial,Helvetica,sans-serif;font-weight:700'}, it.sh);
+      t.textContent = it.shield;
+    }
+    if (it.id) byId[it.id] = it;
+    ITEMS.push(it);
+  });
+});
+
+const PL = PLACES.map(([txt, lon, lat, size, rot = 0, cls]) => {
+  const g = el('g', {}, gLabels);
+  const fill = cls === 'sea' ? '#4e7480' : cls === 'water' ? '#4e7480' : cls === 'side' ? '#8a7a62' : '#5b5148';
+  const t = el('text', {'text-anchor': 'middle', 'font-size': size, fill, 'stroke-width': cls === 'sea' || cls === 'water' ? 0 : 3,
+    'letter-spacing': cls === 'sea' || cls === 'side' ? 3 : 0, 'font-weight': cls ? 700 : 500, transform: rot ? `rotate(${rot})` : ''}, g);
+  t.textContent = txt;
+  return {g, at: pr([lon, lat])};
+});
+
+/* ---------------- Görünüm (zoom) ---------------- */
+const FULL = [0, 0, W, H];
+let view = FULL.slice();
+function fit(b, pad = 0.45, minW = 120) {
+  let w = (b[2] - b[0]), h = (b[3] - b[1]);
+  const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+  w = Math.max(w * (1 + pad * 2), minW); h = Math.max(h * (1 + pad * 2), minW * H / W);
+  if (w / h > W / H) h = w * H / W; else w = h * W / H;
+  if (w >= W) return FULL.slice();
+  return [Math.min(Math.max(cx - w / 2, 0), W - w), Math.min(Math.max(cy - h / 2, 0), H - h), w, h];
+}
+EVENTS.forEach(ev => {
+  if (ev.full || !ev.items.length) { ev.view = FULL.slice(); return; }
+  const b = [1e9, 1e9, -1e9, -1e9];
+  for (const it of ev.items) for (const [x, y] of it.p) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
+  ev.view = fit(b);
+});
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerpV = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
+const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function unionV(a, b) {
+  const r = [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0] + a[2], b[0] + b[2]), Math.max(a[1] + a[3], b[1] + b[3])];
+  return fit(r, 0.05, 0);
+}
+const overlaps = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
+
+/* ---------------- Çizim ---------------- */
+const svg = document.getElementById('map'), hatch = document.getElementById('hatch');
+const sbar = document.getElementById('sbar'), stext = document.getElementById('stext');
+function render() {
+  const k = view[2] / W;
+  svg.setAttribute('viewBox', view.map(f2).join(' '));
+  hatch.setAttribute('patternTransform', `scale(${f2(k)}) rotate(35)`);
+  for (const it of ITEMS) {
+    const vis = it.prog > 0 && it.gone < 1;
+    it.g.style.display = vis ? '' : 'none';
+    const op = 1 - it.gone;
+    it.g.setAttribute('opacity', op);
+    it.hl.setAttribute('opacity', vis && it.fresh ? .55 * op : 0);
+    if (!vis) { if (it.lab) it.lab.style.display = 'none'; if (it.sh) it.sh.style.display = 'none'; continue; }
+    if (it.kind === 'marker') {
+      const s = k * Math.min(1, it.prog * 1.3);
+      it.mark.setAttribute('transform', `translate(${f2(it.x)},${f2(it.y)}) scale(${s.toFixed(3)})`);
+      it.hl.setAttribute('cx', it.x); it.hl.setAttribute('cy', it.y); it.hl.setAttribute('r', 16 * k);
+    } else {
+      const part = partial(it.p, it.segs, it.len, it.prog);
+      const d = smooth(part);
+      for (const p of it.paths) p.setAttribute('d', d);
+      it.hl.setAttribute('d', d);
+      if (it.pencil) {
+        const jp = part.map((q, i) => { const j = it.jit[Math.min(i, it.jit.length - 1)]; return [q[0] + j[0] * 1.4 * k, q[1] + j[1] * 1.4 * k]; });
+        it.pencil.setAttribute('d', smooth(jp));
+      }
+    }
+    const lo = Math.max(0, Math.min(1, (it.prog - .6) / .4)) * op;
+    for (const [g, at] of [[it.lab, it.labAt], [it.sh, it.shAt]]) {
+      if (!g) continue;
+      g.style.display = lo > 0 ? '' : 'none';
+      g.setAttribute('opacity', lo);
+      g.setAttribute('transform', `translate(${f2(at[0])},${f2(at[1])}) scale(${k.toFixed(4)})`);
+    }
+  }
+  for (const p of PL) p.g.setAttribute('transform', `translate(${f2(p.at[0])},${f2(p.at[1])}) scale(${k.toFixed(4)})`);
+  // ölçek çubuğu
+  const pxPerUnit = svg.clientWidth / view[2], pxPerKm = pxPerUnit * 1000 / 111;
+  let km = 0.5; for (const c of [0.5, 1, 2, 5, 10, 20]) if (c * pxPerKm <= 130) km = c;
+  sbar.style.width = (km * pxPerKm) + 'px';
+  stext.textContent = (km < 1 ? km * 1000 + ' m' : km + ' km');
+}
+
+/* ---------------- Panel / zaman çizelgesi ---------------- */
+const $ = id => document.getElementById(id);
+const stamp = $('stamp'), stampT = $('stampT');
+const Y0 = 1923, Y1 = 2026;
+const tl = $('timeline'), dots = [];
+EVENTS.forEach((ev, i) => {
+  const b = document.createElement('button');
+  b.className = 'dot'; b.title = `${ev.label || ev.year} — ${ev.title}`;
+  let pos = (ev.year - Y0) / (Y1 - Y0) * 100;
+  if (i > 0 && EVENTS[i - 1].year === ev.year) pos += 1.2;
+  b.style.left = pos + '%';
+  b.onclick = () => seek(i);
+  tl.appendChild(b); dots.push(b);
+});
+for (const y of [1923, 1950, 1975, 2000, 2026]) {
+  const s = document.createElement('span'); s.className = 'tick';
+  s.style.left = (y - Y0) / (Y1 - Y0) * 100 + '%'; s.textContent = y; tl.appendChild(s);
+}
+const list = $('list'), lis = EVENTS.map((ev, i) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<b>${ev.label || ev.year}</b><span>${ev.title}</span>`;
+  li.onclick = () => seek(i); list.appendChild(li); return li;
+});
+
+let cur = 0;
+function setYear(y) { stamp.firstChild.nodeValue = y; }
+function showPanel(i) {
+  const ev = EVENTS[i];
+  $('pYear').textContent = ev.label || ev.year;
+  $('pTitle').textContent = ev.title;
+  $('pDesc').textContent = ev.desc;
+  $('pTags').innerHTML = ev.tags.map(t => `<span class="tag">${t}</span>`).join('');
+  stampT.textContent = ev.title;
+}
+function updateUI() {
+  dots.forEach((d, i) => { d.classList.toggle('done', i <= cur); d.classList.toggle('cur', i === cur); });
+  lis.forEach((li, i) => { li.classList.toggle('done', i <= cur); li.classList.toggle('cur', i === cur); });
+  const cl = lis[cur];
+  if (cl) {
+    const top = cl.offsetTop;
+    if (top < list.scrollTop || top + cl.offsetHeight > list.scrollTop + list.clientHeight)
+      list.scrollTop = top - list.clientHeight / 2;
+  }
+  $('tfill').style.width = (EVENTS[cur].year - Y0) / (Y1 - Y0) * 100 + '%';
+  const cnt = {bogazK: 0, bogazT: 0, halic: 0};
+  for (const it of ITEMS) if (it.count && it.prog >= .99 && it.gone < .5) cnt[it.count]++;
+  $('sBK').textContent = cnt.bogazK; $('sBT').textContent = cnt.bogazT; $('sHK').textContent = cnt.halic;
+}
+
+/* ---------------- Oynatma motoru ---------------- */
+let playing = true, speed = 1, clock = 0, lastTs = null, gen = 0;
+function frame(ts) {
+  if (lastTs != null && playing) clock += Math.min(ts - lastTs, 100) * speed;
+  lastTs = ts; render(); requestAnimationFrame(frame);
+}
+function wait(ms, step) {
+  const g = gen, start = clock;
+  return new Promise((res, rej) => {
+    (function f() {
+      if (g !== gen) return rej('cancel');
+      const t = Math.min(1, (clock - start) / ms);
+      if (step) step(t);
+      t >= 1 ? res() : requestAnimationFrame(f);
+    })();
+  });
+}
+async function playEvent(i) {
+  const ev = EVENTS[i], prev = EVENTS[cur];
+  for (const it of ITEMS) it.fresh = false;
+  showPanel(i);
+  const from = view.slice(), to = ev.view, y0 = prev.year;
+  const yr = t => setYear(Math.round(lerp(y0, ev.year, t)));
+  if (!overlaps(from, to) && !(from[2] >= W) && !(to[2] >= W)) {
+    const via = unionV(from, to);
+    await wait(750, t => { view = lerpV(from, via, ease(t)); yr(t / 2); });
+    await wait(850, t => { view = lerpV(via, to, ease(t)); yr(.5 + t / 2); });
+  } else {
+    await wait(1100, t => { view = lerpV(from, to, ease(t)); yr(t); });
+  }
+  setYear(ev.label || ev.year);
+  const gone = (ev.removes || []).map(id => byId[id]);
+  for (const it of ev.items) it.fresh = true;
+  await wait(ev.items.length ? 2000 : 300, t => {
+    const e = ease(t);
+    ev.items.forEach(it => it.prog = e);
+    gone.forEach(it => it.gone = e);
+  });
+  cur = i; updateUI();
+  await wait(ev.full ? 1500 : 2600);
+}
+async function run() {
+  const g = ++gen;
+  try {
+    while (cur < EVENTS.length - 1 && g === gen) await playEvent(cur + 1);
+    if (g === gen) setPlaying(false);
+  } catch (e) { /* iptal edildi */ }
+}
+function seek(i, keepPlaying = playing) {
+  gen++;
+  i = Math.max(0, Math.min(EVENTS.length - 1, i));
+  cur = i;
+  for (const it of ITEMS) {
+    it.prog = it.ev <= i ? 1 : 0;
+    it.fresh = it.ev === i && i > 0;
+    it.gone = 0;
+  }
+  EVENTS.forEach((ev, j) => { if (j <= i) (ev.removes || []).forEach(id => byId[id].gone = 1); });
+  view = EVENTS[i].view.slice();
+  showPanel(i); setYear(EVENTS[i].label || EVENTS[i].year); updateUI();
+  setPlaying(keepPlaying && i < EVENTS.length - 1);
+}
+function setPlaying(p) {
+  const was = playing;
+  playing = p;
+  $('play').textContent = p ? '❚❚ Durdur' : '▶ Oynat';
+  $('play').classList.toggle('on', p);
+  if (p && !was) {} // saat devam eder
+  if (p && (gen === 0 || !running())) run();
+}
+let runGen = -1;
+const running = () => runGen === gen;
+const _run = run;
+run = async function () { runGen = gen + 1; return _run(); };
+
+$('play').onclick = () => {
+  if (!playing && cur >= EVENTS.length - 1) { seek(0, true); return; }
+  setPlaying(!playing);
+};
+$('next').onclick = () => seek(cur + 1, false);
+$('prev').onclick = () => seek(cur - 1, false);
+$('first').onclick = () => seek(0, false);
+$('last').onclick = () => seek(EVENTS.length - 1, false);
+document.querySelectorAll('.speed button').forEach(b => b.onclick = () => {
+  speed = +b.dataset.s;
+  document.querySelectorAll('.speed button').forEach(x => x.classList.toggle('on', x === b));
+});
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); $('play').click(); }
+  else if (e.key === 'ArrowRight') seek(cur + 1, false);
+  else if (e.key === 'ArrowLeft') seek(cur - 1, false);
+});
+
+// başlangıç
+for (const it of EVENTS[0].items) it.prog = 1;
+showPanel(0); setYear(1923); updateUI();
+requestAnimationFrame(frame);
+setTimeout(() => { if (playing && !running()) run(); }, 1200);
+})();
+</script>
+</body>
+</html>
