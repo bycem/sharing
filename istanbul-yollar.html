@@ -540,29 +540,60 @@ function wait(ms, step) {
     })();
   });
 }
+const T = {via1: 750, via2: 850, move: 1100, draw: 2000, out: 1100, hold: 2400, holdFull: 1500};
+const CLOSE_W = 150;
+const closeView = p => fit([p[0], p[1], p[0], p[1]], 0, CLOSE_W);
+const tipOf = it => { const part = partial(it.p, it.segs, it.len, it.prog); return part[part.length - 1] || it.p[0]; };
+async function travel(to, ev, y0) {
+  const from = view.slice();
+  const yr = t => setYear(Math.round(lerp(y0, ev.year, t)));
+  if (!overlaps(from, to) && !(from[2] >= FULL[2]) && !(to[2] >= FULL[2])) {
+    const via = unionV(from, to);
+    await wait(T.via1, t => { view = lerpV(from, via, ease(t)); yr(t / 2); });
+    await wait(T.via2, t => { view = lerpV(via, to, ease(t)); yr(.5 + t / 2); });
+  } else {
+    await wait(T.move, t => { view = lerpV(from, to, ease(t)); yr(t); });
+  }
+  setYear(ev.label || ev.year);
+}
 async function playEvent(i) {
   const ev = EVENTS[i], prev = EVENTS[cur];
   for (const it of ITEMS) it.fresh = false;
   showPanel(i);
-  const from = view.slice(), to = ev.view, y0 = prev.year;
-  const yr = t => setYear(Math.round(lerp(y0, ev.year, t)));
-  if (!overlaps(from, to) && !(from[2] >= W) && !(to[2] >= W)) {
-    const via = unionV(from, to);
-    await wait(750, t => { view = lerpV(from, via, ease(t)); yr(t / 2); });
-    await wait(850, t => { view = lerpV(via, to, ease(t)); yr(.5 + t / 2); });
-  } else {
-    await wait(1100, t => { view = lerpV(from, to, ease(t)); yr(t); });
-  }
-  setYear(ev.label || ev.year);
   const gone = (ev.removes || []).map(id => byId[id]);
-  for (const it of ev.items) it.fresh = true;
-  await wait(ev.items.length ? 2000 : 300, t => {
-    const e = ease(t);
-    ev.items.forEach(it => it.prog = e);
-    gone.forEach(it => it.gone = e);
-  });
+  const lines = ev.items.filter(it => it.kind !== 'marker');
+  if (!lines.length || ev.view[2] <= CLOSE_W * 1.3) {
+    // küçük olay: kadraja sığıyor, olduğu yerde çiz
+    await travel(ev.view, ev, prev.year);
+    for (const it of ev.items) it.fresh = true;
+    await wait(ev.items.length ? T.draw : 300, t => {
+      const e = ease(t);
+      ev.items.forEach(it => it.prog = e);
+      gone.forEach(it => it.gone = e);
+    });
+  } else {
+    // uzun yol: yakınlaş, kalemin ucunu takip et, sonra genel görünüme çekil
+    await travel(closeView(lines[0].p[0]), ev, prev.year);
+    for (const it of ev.items) it.fresh = true;
+    let c = [view[0] + view[2] / 2, view[1] + view[3] / 2];
+    for (const [n, it] of ev.items.entries()) {
+      let last = clock;
+      const dur = it.kind === 'marker' ? 500 : Math.min(3200, Math.max(600, it.len * 9));
+      await wait(dur, t => {
+        it.prog = t;
+        if (n === 0) gone.forEach(g => g.gone = t);
+        const dt = clock - last; last = clock;
+        const tip = it.kind === 'marker' ? it.p[0] : tipOf(it);
+        const a = 1 - Math.exp(-dt / 220);
+        c = [c[0] + (tip[0] - c[0]) * a, c[1] + (tip[1] - c[1]) * a];
+        view = closeView(c);
+      });
+    }
+    const from = view.slice();
+    await wait(T.out, t => { view = lerpV(from, ev.view, ease(t)); });
+  }
   cur = i; updateUI();
-  await wait(ev.full ? 1500 : 2600);
+  await wait(ev.full ? T.holdFull : T.hold);
 }
 async function run() {
   const g = ++gen;
